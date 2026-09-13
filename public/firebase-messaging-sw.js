@@ -6,12 +6,8 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-com
 // Initialize the Firebase app in the service worker
 // In production, these will match your Firebase Web App credentials
 const firebaseConfig = {
-  apiKey: "PLACEHOLDER_FIREBASE_API_KEY",
-  authDomain: "PLACEHOLDER_AUTH_DOMAIN",
-  projectId: "PLACEHOLDER_PROJECT_ID",
-  storageBucket: "PLACEHOLDER_STORAGE_BUCKET",
-  messagingSenderId: "PLACEHOLDER_SENDER_ID",
-  appId: "PLACEHOLDER_APP_ID"
+  projectId: "levelone-54321",
+  messagingSenderId: "704045017488",
 };
 
 try {
