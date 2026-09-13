@@ -42,24 +42,42 @@ const geistMono = Geist_Mono({
 // Add them only on the specific page/route that needs fresh data.
 
 export const metadata: Metadata = {
-  title: "Levelone by Aayush",
-  applicationName: "Levelone by Aayush",
-  description: "Levelone Webdev - A Phase-Based webdev learning platform built by Aayush Sharma. Your ultimate platform for web development learning.",
-  keywords: ["levelone", "levelone webdev", "levelone by aayush sharma", "levelone web", "aayush sharma", "webdev", "learning management system", "lms"],
-  authors: [{ name: "Aayush Sharma" }],
+  metadataBase: new URL('https://levelonedev.tech'),
+  title: {
+    default: "LevelOne | Next-Gen Web Development Bootcamp & Engineering Cohort",
+    template: "%s | LevelOne Dev"
+  },
+  applicationName: "LevelOne",
+  description: "Master modern full-stack web development with LevelOne. Intensive project-based engineering cohort, interactive browser sandbox, guaranteed internships for top performers, and battle-tested curriculum.",
+  keywords: [
+    "levelone", 
+    "levelone dev", 
+    "levelonedev.tech", 
+    "levelone webdev", 
+    "levelone bootcamp", 
+    "full stack web development", 
+    "react nextjs cohort", 
+    "aayush sharma",
+    "web development internship",
+    "coding bootcamp india"
+  ],
+  authors: [{ name: "Aayush Sharma", url: "https://levelonedev.tech/team" }],
   creator: "Aayush Sharma",
-  publisher: "Aayush Sharma",
+  publisher: "LevelOne",
+  alternates: {
+    canonical: 'https://levelonedev.tech',
+  },
   openGraph: {
-    title: "Levelone by Aayush sharma",
-    description: "Levelone Webdev - A Phase-Based Learning Management System built by Aayush Sharma. Join our web development journey.",
-    url: "https://l1webdev.vercel.app",
-    siteName: "Levelone by Aayush",
+    title: "LevelOne | Next-Gen Web Development Bootcamp",
+    description: "Learn Full-Stack Web Development through intense structured challenges, live mentoring, and guaranteed internship opportunities.",
+    url: "https://levelonedev.tech",
+    siteName: "LevelOne",
     images: [
       {
         url: "/icon-ninja-round.png",
         width: 800,
         height: 800,
-        alt: "Levelone Logo",
+        alt: "LevelOne Logo",
       },
     ],
     locale: "en_US",
@@ -67,8 +85,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Levelone by Aayush sharma",
-    description: "Levelone Webdev - A Phase-Based Learning Management System built by Aayush Sharma.",
+    title: "LevelOne | Web Development Engineering Cohort",
+    description: "LevelOne Web Development Bootcamp — Build production apps, master backend & frontend, and compete for top internships.",
     images: ["/icon-ninja-round.png"],
   },
   icons: {
@@ -101,9 +119,18 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "WebSite",
-              "name": "Levelone by Aayush",
-              "url": "https://l1webdev.vercel.app/"
+              "@type": "EducationalOrganization",
+              "name": "LevelOne",
+              "url": "https://levelonedev.tech",
+              "logo": "https://levelonedev.tech/icon-ninja-round.png",
+              "description": "LevelOne Webdev Bootcamp & Engineering Cohort with guaranteed internships and project-based challenges.",
+              "founder": {
+                "@type": "Person",
+                "name": "Aayush Sharma"
+              },
+              "sameAs": [
+                "https://github.com/mraayush978blip/levelone"
+              ]
             })
           }}
         />
