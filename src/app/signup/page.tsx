@@ -14,7 +14,8 @@ import {
     Check,
     ArrowRight,
     Zap,
-    AlertCircle
+    AlertCircle,
+    Gift
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ export default function SignupPage() {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [referralCode, setReferralCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -171,6 +173,7 @@ export default function SignupPage() {
                     email: email.trim(),
                     password: password,
                     phone: phone.trim(),
+                    referral_code: referralCode.trim() || undefined,
                     ...paymentDetails,
                 }),
             });
@@ -308,6 +311,27 @@ export default function SignupPage() {
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="10-digit mobile number"
                                         className="w-full !pl-11 pr-4 py-3 bg-[#050507] border border-zinc-800 rounded-xl text-sm font-medium text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center justify-between">
+                                    <span>Referral Code <span className="text-zinc-500 font-normal lowercase">(optional)</span></span>
+                                    <Link href="/referral" target="_blank" className="text-blue-400 hover:underline normal-case font-normal text-[10px]">
+                                        Create or check a code ↗
+                                    </Link>
+                                </label>
+                                <div className="relative">
+                                    <Gift className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        id="referral_code"
+                                        name="referral_code"
+                                        value={referralCode}
+                                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                                        placeholder="e.g. CAMPUS50"
+                                        className="w-full !pl-11 pr-4 py-3 bg-[#050507] border border-zinc-800 rounded-xl text-sm font-medium text-white uppercase tracking-wider focus:outline-none focus:border-blue-500 transition-colors"
                                     />
                                 </div>
                             </div>

@@ -13,6 +13,7 @@ export async function POST(request: Request) {
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature,
+            referral_code,
             isMock = false,
         } = body;
 
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
 
         // Set student UID as email ID
         const studentUid = normalizedEmail;
+        const cleanReferralCode = referral_code ? referral_code.trim().toUpperCase() : null;
 
         // 4. Insert into public.users table
         const { error: insertUserError } = await supabaseAdmin
@@ -84,6 +86,7 @@ export async function POST(request: Request) {
                 role: 'student',
                 status: 'active',
                 points: 50, // Welcome signup bonus!
+                used_referral_code: cleanReferralCode,
             });
 
         if (insertUserError) {
@@ -91,7 +94,34 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: insertUserError.message }, { status: 500 });
         }
 
-        // 5. Record payment in public.payments table
+        // 5. Record referral conversion if referral_code provided
+        if (cleanReferralCode) {
+            try {
+                // Find matching active referral code
+                const { data: codeRow } = await supabaseAdmin
+                    .from('referral_codes')
+                    .select('id, code')
+                    .ilike('code', cleanReferralCode)
+                    .maybeSingle();
+
+                if (codeRow) {
+                    await supabaseAdmin.from('referral_usages').insert({
+                        referral_code_id: codeRow.id,
+                        referral_code: codeRow.code,
+                        referred_user_id: authUserId,
+                        referred_student_name: name.trim(),
+                        referred_student_email: normalizedEmail,
+                        amount_paid: 149.00,
+                        payment_id: razorpay_payment_id || 'mock_pay',
+                        payment_status: 'paid',
+                    });
+                }
+            } catch (refErr) {
+                console.warn('[Verify & Register] Error logging referral usage:', refErr);
+            }
+        }
+
+        // 6. Record payment in public.payments table
         try {
             await supabaseAdmin.from('payments').insert({
                 user_id: authUserId,

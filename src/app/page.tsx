@@ -12,7 +12,8 @@ import {
   Users, 
   ChevronRight,
   Phone,
-  Mail
+  Mail,
+  Gift
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CyberMatrixBackground from '@/components/CyberMatrixBackground';
@@ -57,6 +58,12 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-3">
+              <Link
+                href="/referral"
+                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <Gift className="w-3.5 h-3.5" /> Refer & Earn
+              </Link>
               <Link
                 href="/team"
                 className="hidden sm:inline-block text-xs font-semibold text-zinc-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
