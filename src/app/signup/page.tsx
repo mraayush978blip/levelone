@@ -337,10 +337,10 @@ export default function SignupPage() {
                                     </div>
                                     <div className="text-right">
                                         <div className="flex items-baseline gap-1.5 justify-end">
-                                            <span className="text-xs text-zinc-500 line-through font-semibold">₹249</span>
+                                            <span className="text-xs text-zinc-500 line-through font-semibold">₹250</span>
                                             <span className="text-xl font-black text-white">₹149</span>
                                         </div>
-                                        <span className="text-[10px] text-emerald-400 font-bold block">Save ₹100 today</span>
+                                        <span className="text-[10px] text-emerald-400 font-bold block">Save ₹101 today</span>
                                     </div>
                                 </div>
 

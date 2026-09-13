@@ -178,8 +178,11 @@ export default function HomePage() {
               </div>
             </div>
             <div className="p-4 rounded-xl bg-[#0e1217]/90 border border-zinc-800/80">
-              <div className="text-2xl font-bold text-cyan-400">₹149</div>
-              <div className="text-xs text-zinc-400 mt-1">One-Time Fee</div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-sm text-zinc-500 line-through font-semibold">₹250</span>
+                <span className="text-2xl font-bold text-cyan-400">₹149</span>
+              </div>
+              <div className="text-xs text-emerald-400 mt-1 font-semibold">Launch Offer (One-Time)</div>
             </div>
           </motion.div>
 

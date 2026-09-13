@@ -671,32 +671,6 @@ export default function LinkedInShowcase() {
           </button>
         </div>
       )}
-
-      {/* Community Banner / CTA */}
-      <div className="mt-14 p-6 md:p-8 rounded-2xl border border-zinc-800 bg-[#0e1217] flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-        <div className="space-y-1">
-          <div className="flex items-center justify-center md:justify-start gap-2 text-[#70b5f9] text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4" />
-            Join LevelOne Developers
-          </div>
-          <h3 className="text-lg md:text-xl font-bold text-white">
-            Share your progress on LinkedIn and build your developer network.
-          </h3>
-          <p className="text-zinc-400 text-xs md:text-sm">
-            Tag LevelOne or our team to get your post featured here.
-          </p>
-        </div>
-
-        <a
-          href="https://www.linkedin.com"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#0a66c2] hover:bg-[#004182] text-white font-semibold text-xs uppercase tracking-wider transition-all shadow-md shrink-0"
-        >
-          <Linkedin className="w-4 h-4 fill-current" />
-          Join On LinkedIn
-        </a>
-      </div>
     </section>
   );
 }
