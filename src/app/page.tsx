@@ -10,7 +10,9 @@ import {
   Terminal, 
   Rocket, 
   Users, 
-  ChevronRight
+  ChevronRight,
+  Phone,
+  Mail
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CyberMatrixBackground from '@/components/CyberMatrixBackground';
@@ -269,8 +271,56 @@ export default function HomePage() {
         </section>
 
         {/* FOOTER */}
-        <footer className="w-full border-t border-zinc-800/80 bg-[#030305] py-8 text-center text-xs text-zinc-500 z-10 relative">
-          <p>© 2026 LevelOne Web Development. All rights reserved.</p>
+        <footer className="w-full border-t border-zinc-800/80 bg-[#030305] py-12 px-4 md:px-8 text-xs text-zinc-500 z-10 relative">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-left">
+            {/* Brand Col */}
+            <div className="space-y-3 md:col-span-2">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="font-mono text-sm font-black text-white tracking-widest uppercase">
+                  LevelOne
+                </span>
+              </div>
+              <p className="text-zinc-400 text-xs leading-relaxed max-w-md">
+                Phase-based full-stack web development engineering cohort. Build production projects, compete in live benchmarks, and earn guaranteed internships.
+              </p>
+              <div className="pt-2 flex flex-col sm:flex-row gap-4 text-xs font-mono text-zinc-400">
+                <a href="tel:+916266439162" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
+                  <Phone className="w-3.5 h-3.5 text-blue-400" /> +91 6266439162
+                </a>
+                <a href="mailto:aayush@levelonedev.tech" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
+                  <Mail className="w-3.5 h-3.5 text-blue-400" /> aayush@levelonedev.tech
+                </a>
+              </div>
+            </div>
+
+            {/* Platform Links */}
+            <div className="space-y-3">
+              <h4 className="text-white font-bold tracking-wider uppercase text-[11px]">Platform</h4>
+              <ul className="space-y-2 text-zinc-400">
+                <li><Link href="/signup" className="hover:text-blue-400 transition-colors">Enroll (₹149)</Link></li>
+                <li><Link href="/login" className="hover:text-blue-400 transition-colors">Student Login</Link></li>
+                <li><Link href="/team" className="hover:text-blue-400 transition-colors">Meet Our Team</Link></li>
+                <li><Link href="/install" className="hover:text-blue-400 transition-colors">Install App</Link></li>
+              </ul>
+            </div>
+
+            {/* Legal & Compliance Links */}
+            <div className="space-y-3">
+              <h4 className="text-white font-bold tracking-wider uppercase text-[11px]">Legal & Policies</h4>
+              <ul className="space-y-2 text-zinc-400">
+                <li><Link href="/terms" className="hover:text-blue-400 transition-colors">Terms & Conditions</Link></li>
+                <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/refund" className="hover:text-blue-400 transition-colors">Refund & Cancellation</Link></li>
+                <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contact Us</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto pt-6 border-t border-zinc-850 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <p>© 2026 LevelOne Web Development Cohort. All rights reserved.</p>
+            <p className="text-[11px] text-zinc-600">Secure Payments via Cashfree Payments & Razorpay</p>
+          </div>
         </footer>
       </main>
     );
