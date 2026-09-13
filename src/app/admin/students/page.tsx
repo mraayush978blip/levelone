@@ -259,6 +259,9 @@ export default function StudentListPage() {
                                     Status
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Payment / Source
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Joined Date
                                 </th>
                                 <th scope="col" className="relative px-6 py-3">
@@ -290,6 +293,20 @@ export default function StudentListPage() {
                                             }`}>
                                             {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-xs">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md w-fit">
+                                                ⚡ Online Pay (₹152)
+                                            </span>
+                                            {student.used_referral_code ? (
+                                                <span className="text-[11px] text-blue-600 font-mono font-semibold">
+                                                    Ref: {student.used_referral_code}
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] text-gray-400">Direct Signup</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {new Date(student.created_at).toLocaleDateString()}

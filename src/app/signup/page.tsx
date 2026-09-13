@@ -50,7 +50,7 @@ export default function SignupPage() {
     const [copied, setCopied] = useState(false);
     const [loggingIn, setLoggingIn] = useState(false);
 
-    const feeAmount = 149;
+    const feeAmount = 152; // ₹149 Base Fee + ₹3 Gateway Charge
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -321,17 +321,45 @@ export default function SignupPage() {
                                 </div>
                             </div>
 
-                            {/* Fee Card */}
-                            <div className="p-4 rounded-2xl bg-blue-950/20 border border-blue-900/30 flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                                        <Zap className="w-3.5 h-3.5 text-blue-400 fill-blue-400" /> Curriculum Access Fee
-                                    </p>
-                                    <p className="text-[11px] text-zinc-400 mt-0.5">Lifetime learning portal & progression tracker</p>
+                            {/* Pricing & Fee Breakdown Card */}
+                            <div className="p-4 rounded-2xl bg-gradient-to-b from-blue-950/30 to-indigo-950/20 border border-blue-900/40 space-y-3">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                                                <Zap className="w-3.5 h-3.5 text-blue-400 fill-blue-400" /> Full Curriculum Access
+                                            </p>
+                                            <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full">
+                                                40% OFF LAUNCH
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-zinc-400 mt-0.5">Lifetime sandbox & cohort membership</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="flex items-baseline gap-1.5 justify-end">
+                                            <span className="text-xs text-zinc-500 line-through font-semibold">₹249</span>
+                                            <span className="text-xl font-black text-white">₹149</span>
+                                        </div>
+                                        <span className="text-[10px] text-emerald-400 font-bold block">Save ₹100 today</span>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <span className="text-xl font-black text-white">₹{feeAmount}</span>
-                                    <span className="text-[10px] text-zinc-400 block font-semibold">One-time</span>
+
+                                {/* Gateway Fee Calculator Breakdown */}
+                                <div className="pt-2 border-t border-zinc-800/80 space-y-1 text-[11px]">
+                                    <div className="flex justify-between text-zinc-400">
+                                        <span>Course Enrollment Fee</span>
+                                        <span className="text-zinc-300 font-medium">₹149.00</span>
+                                    </div>
+                                    <div className="flex justify-between text-zinc-400">
+                                        <span className="flex items-center gap-1">
+                                            Online Payment Gateway Fee (2%)
+                                        </span>
+                                        <span className="text-zinc-300 font-medium">+₹3.00</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-bold text-white pt-1 border-t border-zinc-800/50">
+                                        <span>Total Amount Payable</span>
+                                        <span className="text-blue-400 font-mono text-sm">₹152.00</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -347,7 +375,7 @@ export default function SignupPage() {
                                     </>
                                 ) : (
                                     <>
-                                        Pay ₹{feeAmount} & Complete Registration →
+                                        Pay ₹{feeAmount} & Complete Enrollment →
                                     </>
                                 )}
                             </button>

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { amount = 149, email, name, phone } = body;
+        const { amount = 152, email, name, phone } = body;
 
         const appId = process.env.CASHFREE_APP_ID?.trim();
         const secretKey = process.env.CASHFREE_SECRET_KEY?.trim();
