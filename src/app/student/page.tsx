@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useCallback } from 'react';
 import { getPhaseStatus, cn } from '@/lib/utils';
+import { getStudentPhaseProgression } from '@/lib/phase-progression';
 import AnimatedBackground from '@/components/ui/animated-background';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -48,9 +49,8 @@ export default function StudentDashboard() {
                 ]);
             };
 
-            // Only run revoke check when the user is already flagged as revoked,
-            // OR when there are actually ended mandatory phases to check against.
-            // This prevents false redirects on fresh instances / all-future phases.
+            // Relative Pacing Revocation Check:
+            // Check if student is flagged revoked or if active phase is overdue (>20 days without submission)
             try {
                 if (user?.status === 'revoked') {
                     // Already revoked — let check_and_revoke_self decide if they should be restored
@@ -58,23 +58,6 @@ export default function StudentDashboard() {
                     if (isStillRevoked) {
                         window.location.href = '/revoked';
                         return null;
-                    }
-                } else {
-                    // Only run for active students if there are ended mandatory phases
-                    const now = new Date().toISOString();
-                    const { count: endedMandatoryCount } = await supabase
-                        .from('phases')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('is_active', true)
-                        .eq('is_mandatory', true)
-                        .lt('end_date', now);
-
-                    if (endedMandatoryCount && endedMandatoryCount > 0) {
-                        const { data: isRevoked } = await withTimeout(Promise.resolve(supabase.rpc('check_and_revoke_self')));
-                        if (isRevoked) {
-                            window.location.href = '/revoked';
-                            return null;
-                        }
                     }
                 }
             } catch (e) {
@@ -89,12 +72,13 @@ export default function StudentDashboard() {
                     .eq('is_active', true)
                     .order('phase_number', { ascending: true }));
                 const userPromise = Promise.resolve(supabase.from('users')
-                    .select('total_time_spent_seconds, points, equipped_theme, name')
+                    .select('total_time_spent_seconds, points, equipped_theme, name, created_at')
                     .eq('id', user?.id)
                     .single());
                 const submissionsPromise = Promise.resolve(supabase.from('submissions')
-                    .select('phase_id, assignment_index')
-                    .eq('student_id', user?.id));
+                    .select('phase_id, assignment_index, submitted_at')
+                    .eq('student_id', user?.id)
+                    .eq('status', 'valid'));
                 const activityPromise = Promise.resolve(supabase.from('student_phase_activity')
                     .select('total_time_spent_seconds, phase_id')
                     .eq('student_id', user?.id));
@@ -115,6 +99,13 @@ export default function StudentDashboard() {
 
                 const phases = phasesResult?.data || [];
                 const submissionIds = new Set((submissionsResult?.data || []).map((s: any) => s.phase_id));
+                const submissionDates: Record<string, string> = {};
+                (submissionsResult?.data || []).forEach((s: any) => {
+                    if (s.phase_id && s.submitted_at) {
+                        submissionDates[s.phase_id] = s.submitted_at;
+                    }
+                });
+
                 const totalLearningTime = (activityResult?.data || []).reduce((acc: number, curr: any) => acc + (curr.total_time_spent_seconds || 0), 0);
 
                 const extensions = (extensionsResult?.data || []).reduce((acc: any, curr: any) => {
@@ -122,11 +113,10 @@ export default function StudentDashboard() {
                     return acc;
                 }, {});
 
-
-
                 return {
                     phases,
                     submissions: submissionIds,
+                    submissionDates,
                     extensions,
                     stats: {
                         completedCount: (submissionsResult?.data?.length as number) || 0,
@@ -168,10 +158,14 @@ export default function StudentDashboard() {
 
     const loading = authLoading || dashboardLoading;
     const allPhases = dashboardData?.phases || [];
-    const phases = allPhases.filter((p: any) => getPhaseStatus(p.start_date, p.end_date, p.is_paused) !== 'upcoming');
     const submissions = (dashboardData?.submissions as Set<string>) || new Set<string>();
+    const submissionDates = dashboardData?.submissionDates || {};
     const extensions = dashboardData?.extensions || {};
     const stats = dashboardData?.stats || { completedCount: 0, totalTimeSeconds: 0, points: 0 };
+    const userCreatedAt = dashboardData?.userMetadata?.created_at || user?.created_at;
+
+    const progression = getStudentPhaseProgression(allPhases, submissions, extensions, userCreatedAt, submissionDates);
+    const phases = allPhases;
 
     if (loading) {
         return (
@@ -268,12 +262,11 @@ export default function StudentDashboard() {
                             </div>
 
                             {phases.map((phase: Phase) => {
-                                const status = getPhaseStatus(phase.start_date, phase.end_date, phase.is_paused);
-                                const isLive = status === 'live';
-                                const isPaused = status === 'paused';
-                                const isUpcoming = status === 'upcoming';
-                                const isLocked = isPaused || isUpcoming;
+                                const isUnlockedByProgress = progression.unlockedPhaseIds.has(phase.id);
                                 const isCompleted = submissions.has(phase.id);
+                                const isPaused = phase.is_paused;
+                                const isLocked = !isUnlockedByProgress || isPaused;
+                                const lockReason = progression.lockedReasons[phase.id];
                                 const isClicked = clickedPhaseId === phase.id;
                                 const extensionDate = extensions[phase.id];
 
@@ -341,11 +334,17 @@ export default function StudentDashboard() {
                                                 <div className="flex items-center gap-4 flex-wrap">
                                                     <span className={cn(
                                                         "text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5",
-                                                        isLive ? "text-blue-400" : isCompleted ? "text-purple-400" : "text-zinc-500"
+                                                        isUnlockedByProgress && !isCompleted ? "text-blue-400" : isCompleted ? "text-purple-400" : "text-zinc-500"
                                                     )}>
-                                                        {isLive && <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6] animate-pulse" />}
-                                                        {isPaused ? 'Paused' : isUpcoming ? 'Locked' : isCompleted ? 'Completed' : 'Enrolled'}
+                                                        {isUnlockedByProgress && !isCompleted && <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6] animate-pulse" />}
+                                                        {isPaused ? 'Paused' : !isUnlockedByProgress ? 'Locked' : isCompleted ? 'Completed' : 'Unlocked & Live'}
                                                     </span>
+
+                                                    {lockReason && !isUnlockedByProgress && (
+                                                        <span className="text-[10px] text-zinc-400 font-medium italic">
+                                                            ({lockReason})
+                                                        </span>
+                                                    )}
                                                     
                                                     {phase.is_mandatory && !isCompleted && submissions.has(phase.id) && (
                                                         <span className="text-[10px] font-black uppercase bg-blue-900/30 border border-blue-500/30 text-blue-400 px-2 py-0.5 rounded-md flex items-center gap-1">
@@ -354,11 +353,45 @@ export default function StudentDashboard() {
                                                     )}
 
                                                     <span className="h-1 w-1 rounded-full bg-zinc-800" />
-                                                    {extensionDate ? (
-                                                        <span className="text-[10px] font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]">Extended to: {new Date(extensionDate).toLocaleDateString()}</span>
-                                                    ) : (
-                                                        <span className="text-[10px] font-bold text-zinc-500">Deadline: {new Date(phase.end_date).toLocaleDateString()}</span>
-                                                    )}
+                                                    {(() => {
+                                                        const pDeadline = progression.phaseDeadlines[phase.id];
+                                                        if (extensionDate) {
+                                                            return (
+                                                                <span className="text-[10px] font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]">
+                                                                    Extended to: {new Date(extensionDate).toLocaleDateString()}
+                                                                </span>
+                                                            );
+                                                        }
+                                                        if (isCompleted) {
+                                                            return (
+                                                                <span className="text-[10px] font-bold text-purple-400">
+                                                                    Completed
+                                                                </span>
+                                                            );
+                                                        }
+                                                        if (!isUnlockedByProgress) {
+                                                            return (
+                                                                <span className="text-[10px] font-bold text-zinc-500">
+                                                                    20 Days Upon Unlock
+                                                                </span>
+                                                            );
+                                                        }
+                                                        if (pDeadline) {
+                                                            return (
+                                                                <span className={cn(
+                                                                    "text-[10px] font-bold",
+                                                                    pDeadline.isOverdue ? "text-red-400 font-black" : "text-emerald-400 font-extrabold"
+                                                                )}>
+                                                                    {pDeadline.isOverdue 
+                                                                        ? 'Deadline Passed' 
+                                                                        : `${pDeadline.daysRemaining} day${pDeadline.daysRemaining === 1 ? '' : 's'} remaining`}
+                                                                </span>
+                                                            );
+                                                        }
+                                                        return (
+                                                            <span className="text-[10px] font-bold text-zinc-500">20 Days Pace</span>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
                                         </div>

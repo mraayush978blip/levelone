@@ -51,39 +51,51 @@ export default function RevokedPage() {
                 setAppeal(appeals[0]);
             }
 
-            // 2. Determine missing phase (Admin revoke or phase deadline)
-            const { data: phases } = await supabase
-                .from('phases')
-                .select('id, title, end_date')
-                .eq('is_active', true)
-                .eq('is_mandatory', true);
+            // 2. Determine missing phase (using relative 20-day student progression)
+            const [phasesRes, submissionsRes, extensionsRes, userRes] = await Promise.all([
+                supabase.from('phases')
+                    .select('id, phase_number, title, is_paused, is_active, is_mandatory')
+                    .eq('is_active', true)
+                    .order('phase_number', { ascending: true }),
+                supabase.from('submissions')
+                    .select('phase_id, submitted_at')
+                    .eq('student_id', user?.id)
+                    .eq('status', 'valid'),
+                supabase.from('phase_extensions')
+                    .select('phase_id, extended_deadline')
+                    .eq('student_id', user?.id),
+                supabase.from('users')
+                    .select('created_at')
+                    .eq('id', user?.id)
+                    .single()
+            ]);
+
+            const allPhases = phasesRes.data || [];
+            const subIds = new Set((submissionsRes.data || []).map((s: any) => s.phase_id));
+            const subDates: Record<string, string> = {};
+            (submissionsRes.data || []).forEach((s: any) => {
+                if (s.phase_id && s.submitted_at) subDates[s.phase_id] = s.submitted_at;
+            });
+
+            const extensions: Record<string, string> = {};
+            (extensionsRes.data || []).forEach((ext: any) => {
+                extensions[ext.phase_id] = ext.extended_deadline;
+            });
+
+            const userCreatedAt = userRes.data?.created_at || user?.created_at;
+            const { getStudentPhaseProgression } = await import('@/lib/phase-progression');
+            const prog = getStudentPhaseProgression(allPhases, subIds, extensions, userCreatedAt, subDates);
 
             let foundMissing = null;
-            if (phases) {
-                const now = new Date();
-                const pastPhases = phases.filter(p => {
-                    const deadline = new Date(p.end_date);
-                    deadline.setHours(23, 59, 59, 999);
-                    return deadline < now;
-                });
-
-                for (const phase of pastPhases) {
-                    const { data: submissions } = await supabase
-                        .from('submissions')
-                        .select('id')
-                        .eq('student_id', user?.id)
-                        .eq('phase_id', phase.id)
-                        .eq('status', 'valid');
-                        
-                    if (!submissions || submissions.length === 0) {
-                        foundMissing = phase;
-                        // Check if within 30 days
-                        const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-                        const phaseEnd = new Date(phase.end_date).getTime();
-                        if (now.getTime() - phaseEnd <= thirtyDaysMs) {
-                            setIsWithin30Days(true);
-                        }
-                        break;
+            if (prog.currentActivePhase) {
+                const activeId = prog.currentActivePhase.id;
+                const pDeadline = prog.phaseDeadlines[activeId];
+                if (pDeadline?.isOverdue) {
+                    foundMissing = prog.currentActivePhase;
+                    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+                    const deadlineMs = pDeadline.deadline?.getTime() || 0;
+                    if (Date.now() - deadlineMs <= thirtyDaysMs) {
+                        setIsWithin30Days(true);
                     }
                 }
             }

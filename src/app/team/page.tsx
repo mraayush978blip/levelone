@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Linkedin, Globe, Users, ArrowLeft, Sparkles, Code2, Palette, ShieldCheck } from 'lucide-react';
+import { Linkedin, Globe, Users, ArrowLeft, Sparkles, Code2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { SlideUp, FadeIn, StaggerContainer, StaggerItem } from '@/components/ui/motion-wrapper';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
-const baseTeam = [
+const team = [
     {
         name: "Aayush Sharma",
         role: "Founder & Lead Developer",
@@ -20,10 +20,7 @@ const baseTeam = [
         color: "from-indigo-500 to-blue-500",
         bgImage: "/images/team/aayush.png",
         icon: Code2
-    }
-];
-
-const batch3Members = [
+    },
     {
         name: "Aditya Sahu",
         role: "Team Member",
@@ -34,31 +31,6 @@ const batch3Members = [
         color: "from-purple-500 to-pink-500",
         bgImage: "/images/team/aditya.jpg",
         icon: Users
-    }
-];
-
-const batch1And2Members = [
-    {
-        name: "Palak Chaurasia",
-        role: "Team Member",
-        description: "Crafting the visual identity and premium aesthetic of Levelone.",
-        linkedin: "https://www.linkedin.com/in/palak-chaurasia-6a1388388/",
-        portfolio: undefined,
-        avatar: "🎨",
-        color: "from-purple-500 to-pink-500",
-        bgImage: "/images/team/palak.png",
-        icon: Palette
-    },
-    {
-        name: "Kritagya Jain",
-        role: "Team Member",
-        description: "Ensuring the scalability and precision of our educational infrastructure.",
-        linkedin: "https://www.linkedin.com/in/kritagyajain21/",
-        portfolio: undefined,
-        avatar: "🛡️",
-        color: "from-emerald-500 to-teal-500",
-        bgImage: "/images/team/kritagya.png",
-        icon: ShieldCheck
     }
 ];
 
@@ -80,10 +52,6 @@ export default function TeamPage() {
         backHref = '/admin';
         backLabel = 'Back to Admin';
     }
-
-    // Determine the environment based on NEXT_PUBLIC_APP_URL
-    const isBatch3 = process.env.NEXT_PUBLIC_APP_URL?.includes('l1webdev.vercel.app') || false;
-    const team = [...baseTeam, ...(isBatch3 ? batch3Members : batch1And2Members)];
 
     return (
         <div data-theme="theme-dark" className="relative min-h-screen overflow-hidden bg-background text-foreground">

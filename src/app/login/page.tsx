@@ -136,7 +136,16 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="mt-8 flex items-center justify-center">
+                    <div className="mt-6 text-center">
+                        <p className="text-xs text-muted">
+                            New student?{' '}
+                            <Link href="/signup" className="text-blue-400 font-bold hover:underline">
+                                Enroll Now (₹149) →
+                            </Link>
+                        </p>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-center">
                         <Link href="/" className="inline-flex items-center gap-2 text-xs font-semibold text-muted hover:text-foreground transition-colors">
                             <Home className="h-3.5 w-3.5" />
                             Return Home

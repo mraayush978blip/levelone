@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import VersionCheck from "@/components/VersionCheck";
 import PWADriver from "@/components/PWADriver";
 import NotificationListener from "@/components/NotificationListener";
+import FCMNotificationHandler from "@/components/FCMNotificationHandler";
 import QueryProvider from "@/components/QueryProvider";
 import { Suspense } from 'react';
 import VercelAnalytics from "@/components/VercelAnalytics";
@@ -137,6 +138,9 @@ export default function RootLayout({
             </Suspense>
             <Suspense fallback={null}>
               <NotificationListener />
+            </Suspense>
+            <Suspense fallback={null}>
+              <FCMNotificationHandler />
             </Suspense>
 
             {/* Page content with its own loading state */}

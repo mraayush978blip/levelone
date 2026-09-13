@@ -11,7 +11,8 @@ import {
     LogOut,
     FileText,
     Menu,
-    X
+    X,
+    Radio
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,7 @@ const navItems = [
     { name: 'Assignment', href: '/admin/assignment', icon: FileText },
     { name: 'Students', href: '/admin/students', icon: Users },
     { name: 'Add Students', href: '/admin/student-import', icon: Upload },
+    { name: 'Broadcast', href: '/admin/broadcast', icon: Radio },
     { name: 'Appeals', href: '/admin/appeals', icon: FileText },
 ];
 

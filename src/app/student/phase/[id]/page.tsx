@@ -46,6 +46,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ExpandableText from '@/components/ui/ExpandableText';
 import PhasePathSelector from './components/PhasePathSelector';
 import SubmissionPortal from './components/SubmissionPortal';
+import { getStudentPhaseProgression } from '@/lib/phase-progression';
+import { sendPhaseUnlockEmail } from '@/actions/sendPhaseUnlockEmail';
 
 interface PhasePageProps {
     params: Promise<{ id: string }>;
@@ -121,11 +123,40 @@ export default function PhaseDetailPage({ params }: PhasePageProps) {
                 }
             }
 
-            const status = getPhaseStatus(data.start_date, data.end_date, data.is_paused);
-            if (status === 'upcoming' || status === 'paused') {
+            if (data.is_paused) {
                 router.push('/student');
                 return null;
             }
+
+            // Verify progressive unlock: fetch all active phases and user's submissions with timestamps
+            const [allPhasesRes, userSubsRes, userRes] = await Promise.all([
+                supabase.from('phases').select('id, phase_number, title, is_paused, end_date').eq('is_active', true).order('phase_number', { ascending: true }),
+                supabase.from('submissions').select('phase_id, submitted_at').eq('student_id', user?.id).eq('status', 'valid'),
+                supabase.from('users').select('created_at').eq('id', user?.id).single()
+            ]);
+
+            const allPhases = allPhasesRes.data || [];
+            const userSubIds = new Set((userSubsRes.data || []).map((s: any) => s.phase_id));
+            const subDates: Record<string, string> = {};
+            (userSubsRes.data || []).forEach((s: any) => {
+                if (s.phase_id && s.submitted_at) subDates[s.phase_id] = s.submitted_at;
+            });
+
+            const userCreatedAt = userRes.data?.created_at || user?.created_at;
+            const extMap: Record<string, string> = {};
+            if (phaseData.extended_deadline) extMap[id] = phaseData.extended_deadline;
+
+            const prog = getStudentPhaseProgression(allPhases, userSubIds, extMap, userCreatedAt, subDates);
+
+            if (!prog.unlockedPhaseIds.has(id)) {
+                console.warn(`[PhaseGuard] Phase ${id} is locked for student ${user?.id}`);
+                router.push('/student');
+                return null;
+            }
+
+            // Attach student-relative deadline to phaseData
+            phaseData.studentDeadline = prog.phaseDeadlines[id] || null;
+
             return phaseData;
         },
         enabled: !!id && !!user,
@@ -295,13 +326,15 @@ export default function PhaseDetailPage({ params }: PhasePageProps) {
     // --- Derived State ---
     const isPastDeadline = phase ? (() => {
         const now = new Date();
-        const deadline = phase.extended_deadline
-            ? new Date(phase.extended_deadline)
-            : (() => {
-                const d = new Date(phase.end_date);
-                d.setHours(23, 59, 59, 999);
-                return d;
-            })();
+        const deadline = phase.studentDeadline?.deadline 
+            ? new Date(phase.studentDeadline.deadline)
+            : phase.extended_deadline
+                ? new Date(phase.extended_deadline)
+                : (() => {
+                    const d = new Date(phase.end_date);
+                    d.setHours(23, 59, 59, 999);
+                    return d;
+                })();
             
         // Allow a 30-day grace period after the deadline for revoked students to recover access
         const graceDeadline = new Date(deadline);
@@ -496,6 +529,41 @@ export default function PhaseDetailPage({ params }: PhasePageProps) {
 
             // Silent refresh in background
             queryClient.invalidateQueries({ queryKey: ['submissions', id] });
+            queryClient.invalidateQueries({ queryKey: ['student-dashboard', user.id] });
+
+            // Check if next phase is now unlocked, and notify student via email
+            (async () => {
+                try {
+                    const [phasesRes, allUserSubsRes] = await Promise.all([
+                        supabase.from('phases').select('id, phase_number, title, description, end_date, is_paused').eq('is_active', true).order('phase_number', { ascending: true }),
+                        supabase.from('submissions').select('phase_id').eq('student_id', user.id)
+                    ]);
+                    const allPhases = phasesRes.data || [];
+                    const updatedSubs = new Set<string>((allUserSubsRes.data || []).map((s: any) => s.phase_id));
+                    updatedSubs.add(id); // include this current submission
+
+                    // Find if there is a next phase
+                    const currentPhaseNum = phase.phase_number;
+                    const nextPhase = allPhases.find((p: any) => p.phase_number > currentPhaseNum && !p.is_paused);
+
+                    if (nextPhase && user.email) {
+                        console.log(`[Unlock Email] Triggering unlock email for Phase ${nextPhase.phase_number} to ${user.email}`);
+                        const nextPhaseDeadline = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString();
+                        await sendPhaseUnlockEmail({
+                            studentEmail: user.email,
+                            studentName: user.name || 'Learner',
+                            unlockedPhase: {
+                                phase_number: nextPhase.phase_number,
+                                title: nextPhase.title,
+                                description: nextPhase.description,
+                                end_date: nextPhaseDeadline
+                            }
+                        });
+                    }
+                } catch (emailErr) {
+                    console.error('[Unlock Email] Error triggering phase unlock email:', emailErr);
+                }
+            })();
 
         } catch (err: any) {
             console.error('Submission error:', err);
@@ -635,8 +703,15 @@ export default function PhaseDetailPage({ params }: PhasePageProps) {
                                     <span className="text-xs font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]">
                                         Extended Deadline: {new Date(phase.extended_deadline).toLocaleDateString()}
                                     </span>
+                                ) : phase.studentDeadline?.deadline ? (
+                                    <span className={cn(
+                                        "text-xs font-bold",
+                                        phase.studentDeadline.isOverdue ? "text-red-400 font-black" : "text-muted"
+                                    )}>
+                                        Deadline: {new Date(phase.studentDeadline.deadline).toLocaleDateString()} ({phase.studentDeadline.deadlineFormatted})
+                                    </span>
                                 ) : (
-                                    <span className="text-xs font-bold text-muted">Deadline: {new Date(phase.end_date).toLocaleDateString()}</span>
+                                    <span className="text-xs font-bold text-muted">20-Day Phase Window</span>
                                 )}
                             </div>
                             <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-4 text-foreground">{phase.title}</h1>
