@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 declare global {
     interface Window {
         Razorpay: any;
+        Cashfree: any;
     }
 }
 
@@ -91,71 +92,55 @@ export default function SignupPage() {
         setLoading(true);
 
         try {
-            // 1. Create Razorpay order on backend
-            const orderRes = await fetch('/api/payments/razorpay/create-order', {
+            // 1. Create Cashfree Order on Backend
+            const orderRes = await fetch('/api/payments/cashfree/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     amount: feeAmount,
                     email: email.trim(),
                     name: name.trim(),
+                    phone: phone.trim(),
                 }),
             });
 
             const orderData = await orderRes.json();
             if (!orderRes.ok) throw new Error(orderData.error || 'Failed to initialize payment');
 
-            // 2. If running in mock/demo mode (Razorpay keys not yet entered in .env.local)
-            if (orderData.isMock || !window.Razorpay) {
-                console.log('Completing registration via test simulator');
-                await completeRegistration({
-                    razorpay_order_id: orderData.orderId,
-                    razorpay_payment_id: `pay_mock_${Date.now()}`,
-                    razorpay_signature: 'mock_signature',
-                    isMock: true,
-                });
-                return;
+            const { paymentSessionId, orderId, env } = orderData;
+
+            if (!paymentSessionId) {
+                throw new Error('Payment session could not be created. Please try again.');
             }
 
-            // 3. Open Real Razorpay Checkout modal
-            const options = {
-                key: orderData.keyId,
-                amount: orderData.amount,
-                currency: orderData.currency,
-                name: 'Levelone Learning Platform',
-                description: 'Curriculum & Advanced Sandbox Enrollment Fee',
-                image: '/icon-ninja-round.png',
-                order_id: orderData.orderId,
-                prefill: {
-                    name: name.trim(),
-                    email: email.trim(),
-                    contact: phone.trim(),
-                },
-                theme: {
-                    color: '#2563eb',
-                },
-                handler: async function (response: any) {
-                    await completeRegistration({
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature,
-                        isMock: false,
-                    });
-                },
-                modal: {
-                    ondismiss: function () {
-                        setLoading(false);
-                    },
-                },
+            // 2. Initialize Cashfree Web SDK
+            if (!window.Cashfree) {
+                throw new Error('Cashfree SDK is still loading. Please wait a moment and try again.');
+            }
+
+            const cashfree = window.Cashfree({
+                mode: env === 'PROD' ? 'production' : 'sandbox',
+            });
+
+            // 3. Open Cashfree Dropin Modal / Checkout
+            const checkoutOptions = {
+                paymentSessionId: paymentSessionId,
+                redirectTarget: '_modal', // In-page sleek popup modal
             };
 
-            const rzp = new window.Razorpay(options);
-            rzp.on('payment.failed', function (resp: any) {
-                console.error('Payment failed:', resp.error);
-                setError(resp.error.description || 'Payment was unsuccessful. Please try again.');
-                setLoading(false);
+            cashfree.checkout(checkoutOptions).then((result: any) => {
+                if (result.error) {
+                    console.error('Cashfree Checkout Error:', result.error);
+                    setError(result.error.message || 'Payment was cancelled or failed.');
+                    setLoading(false);
+                    return;
+                }
+
+                if (result.paymentDetails) {
+                    // Payment finished, proceed to verify on server
+                    completeRegistration(orderId);
+                }
             });
-            rzp.open();
         } catch (err: any) {
             console.error('Payment initiation error:', err);
             setError(err.message || 'Payment initiation failed.');
@@ -163,9 +148,9 @@ export default function SignupPage() {
         }
     };
 
-    const completeRegistration = async (paymentDetails: any) => {
+    const completeRegistration = async (orderId: string) => {
         try {
-            const verifyRes = await fetch('/api/payments/razorpay/verify', {
+            const verifyRes = await fetch('/api/payments/cashfree/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -173,8 +158,8 @@ export default function SignupPage() {
                     email: email.trim(),
                     password: password,
                     phone: phone.trim(),
+                    order_id: orderId,
                     referral_code: referralCode.trim() || undefined,
-                    ...paymentDetails,
                 }),
             });
 
@@ -198,7 +183,7 @@ export default function SignupPage() {
 
     return (
         <main className="relative min-h-screen flex flex-col items-center justify-center p-4 md:p-8 bg-[#050507] text-foreground overflow-hidden">
-            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+            <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="lazyOnload" />
 
             {/* Glowing background effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
