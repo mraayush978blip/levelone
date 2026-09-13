@@ -9,6 +9,7 @@ const SPLASH_KEY = 'splash_seen';
 export default function GlobalSplashScreen() {
     // Determine if this is a return visit before first render
     const [phase, setPhase] = useState<'animating' | 'slashed' | 'bloody' | 'hidden'>('animating');
+    const [isReturnVisit, setIsReturnVisit] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
