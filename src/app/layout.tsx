@@ -76,6 +76,9 @@ export const metadata: Metadata = {
     apple: '/icon-ninja-round.png',
     shortcut: '/icon-ninja-round.png',
   },
+  verification: {
+    google: 'IaUidusALWKBeNQoaPCMPGKLQj_gDsU5K-fyZW_co_g',
+  },
 };
 
 export default function RootLayout({
