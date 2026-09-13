@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Play, RotateCcw, Check, Sparkles, Terminal, Layers, Cpu, Flame, ShieldAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Check, Terminal, Layers, Cpu, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const codeSnippets = {
@@ -77,7 +77,6 @@ export default function InteractiveIDEPreview() {
   const [activeSnippetKey, setActiveSnippetKey] = useState<'challenge1' | 'challenge2'>('challenge1');
   const [isRunning, setIsRunning] = useState(false);
   const [runProgress, setRunProgress] = useState(0);
-  const [hasRun, setHasRun] = useState(true);
 
   const snippet = codeSnippets[activeSnippetKey];
 
@@ -89,7 +88,6 @@ export default function InteractiveIDEPreview() {
         if (prev >= 100) {
           clearInterval(interval);
           setIsRunning(false);
-          setHasRun(true);
           return 100;
         }
         return prev + 25;
@@ -140,7 +138,6 @@ export default function InteractiveIDEPreview() {
             <button
               onClick={() => {
                 setActiveSnippetKey('challenge2');
-                setHasRun(true);
               }}
               className={`px-3 py-1 text-xs font-mono rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeSnippetKey === 'challenge2'

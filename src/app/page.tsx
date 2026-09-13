@@ -10,12 +10,7 @@ import {
   Terminal, 
   Rocket, 
   Users, 
-  CheckCircle2, 
-  Clock, 
-  ChevronRight,
-  Sparkles,
-  Layers,
-  MessageSquare
+  ChevronRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CyberMatrixBackground from '@/components/CyberMatrixBackground';

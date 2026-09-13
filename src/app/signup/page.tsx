@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
 import {
-    Sparkles,
     CheckCircle2,
     Lock,
     Mail,
@@ -14,7 +13,6 @@ import {
     Copy,
     Check,
     ArrowRight,
-    Shield,
     Zap,
     AlertCircle
 } from 'lucide-react';

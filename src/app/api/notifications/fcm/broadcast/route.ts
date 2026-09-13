@@ -6,7 +6,7 @@ import * as admin from 'firebase-admin';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { title, message, url, targetAudience } = body;
+        const { title, message, url } = body;
 
         if (!title || !message) {
             return NextResponse.json({ error: 'Title and message are required' }, { status: 400 });
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         }
 
         // 2. Fetch all student tokens
-        let query = supabaseAdmin
+        const query = supabaseAdmin
             .from('user_fcm_tokens')
             .select('token, user_id');
 

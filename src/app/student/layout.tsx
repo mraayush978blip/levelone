@@ -43,7 +43,7 @@ export default function StudentLayout({
             window.history.pushState({ pwaRoot: true }, '');
         }
 
-        const handlePopState = (e: PopStateEvent) => {
+        const handlePopState = () => {
             if (isDashboard) {
                 // We're at the root — closing the app by going back past the sentinel
                 // On Android PWA this will exit the app; on iOS it's a no-op

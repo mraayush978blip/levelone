@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Send, BellRing, Sparkles, CheckCircle2, AlertCircle, Radio, Users } from 'lucide-react';
+import { Send, BellRing, Sparkles, CheckCircle2, Radio, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminBroadcastPage() {
