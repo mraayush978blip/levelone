@@ -18,15 +18,32 @@ if (!isValidUrl) {
     }
 }
 
-if (!supabaseServiceRoleKey || supabaseServiceRoleKey === 'placeholder-key') {
-    if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
-        console.warn('⚠️ [Supabase Admin] SUPABASE_SERVICE_ROLE_KEY is missing or invalid!');
+// Detect if service role key belongs to the current Supabase project
+const isServiceRoleKeyValid = (() => {
+    if (!supabaseServiceRoleKey || supabaseServiceRoleKey === 'placeholder-key') return false;
+    try {
+        const parts = supabaseServiceRoleKey.split('.');
+        if (parts.length >= 2) {
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+            if (payload?.ref && supabaseUrl && !supabaseUrl.includes(payload.ref)) {
+                console.warn(`⚠️ [Supabase Admin] Key ref mismatch: key is for "${payload.ref}" but URL is "${supabaseUrl}". Falling back to anon key.`);
+                return false;
+            }
+        }
+        return true;
+    } catch {
+        return false;
     }
-}
+})();
+
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || 'placeholder-key';
+
+// Use service role key if valid; otherwise gracefully fall back to anon key so public operations (like referral creation) still work!
+const activeKey = isServiceRoleKeyValid ? supabaseServiceRoleKey : supabaseAnonKey;
 
 export const supabaseAdmin = createClient(
     (isValidUrl ? supabaseUrl : 'https://placeholder.supabase.co') as string,
-    ((isValidUrl && supabaseServiceRoleKey) ? supabaseServiceRoleKey : 'placeholder-key') as string,
+    activeKey as string,
     {
         auth: {
             autoRefreshToken: false,

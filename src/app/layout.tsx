@@ -108,8 +108,6 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.webmanifest?v=2" />
-        <link rel="icon" type="image/png" href="/icon-ninja-round.png" />
-        <link rel="apple-touch-icon" href="/icon-ninja-round.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
