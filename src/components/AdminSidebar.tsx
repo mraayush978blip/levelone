@@ -13,7 +13,8 @@ import {
     Menu,
     X,
     Radio,
-    Gift
+    Gift,
+    IndianRupee
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,7 @@ import InstallPWA from './InstallPWA';
 
 const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Batch Pricing', href: '/admin/pricing', icon: IndianRupee },
     { name: 'Phases', href: '/admin/phases', icon: Layers },
     { name: 'Assignment', href: '/admin/assignment', icon: FileText },
     { name: 'Students', href: '/admin/students', icon: Users },

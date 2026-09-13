@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
@@ -40,6 +40,34 @@ export default function SignupPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Dynamic Admin Configured Pricing State
+    const [pricing, setPricing] = useState({
+        original_price: 250,
+        offer_price: 149,
+        gateway_fee: 3,
+        total_amount: 152,
+        discount_label: '40% OFF LAUNCH',
+        batch_name: 'LevelOne Webdev Cohort',
+    });
+
+    useEffect(() => {
+        fetch('/api/admin/pricing')
+            .then((r) => r.json())
+            .then((data) => {
+                if (data && data.total_amount) {
+                    setPricing({
+                        original_price: Number(data.original_price) || 250,
+                        offer_price: Number(data.offer_price) || 149,
+                        gateway_fee: Number(data.gateway_fee) >= 0 ? Number(data.gateway_fee) : 3,
+                        total_amount: Number(data.total_amount) || 152,
+                        discount_label: data.discount_label || '40% OFF LAUNCH',
+                        batch_name: data.batch_name || 'LevelOne Webdev Cohort',
+                    });
+                }
+            })
+            .catch(() => {});
+    }, []);
+
     // Success state
     const [registeredUser, setRegisteredUser] = useState<{
         uid: string;
@@ -50,7 +78,7 @@ export default function SignupPage() {
     const [copied, setCopied] = useState(false);
     const [loggingIn, setLoggingIn] = useState(false);
 
-    const feeAmount = 152; // ₹149 Base Fee + ₹3 Gateway Charge
+    const feeAmount = pricing.total_amount;
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -327,20 +355,24 @@ export default function SignupPage() {
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                                                <Zap className="w-3.5 h-3.5 text-blue-400 fill-blue-400" /> Full Curriculum Access
+                                                <Zap className="w-3.5 h-3.5 text-blue-400 fill-blue-400" /> {pricing.batch_name}
                                             </p>
                                             <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full">
-                                                40% OFF LAUNCH
+                                                {pricing.discount_label}
                                             </span>
                                         </div>
                                         <p className="text-[11px] text-zinc-400 mt-0.5">Lifetime sandbox & cohort membership</p>
                                     </div>
                                     <div className="text-right">
                                         <div className="flex items-baseline gap-1.5 justify-end">
-                                            <span className="text-xs text-zinc-500 line-through font-semibold">₹250</span>
-                                            <span className="text-xl font-black text-white">₹149</span>
+                                            <span className="text-xs text-zinc-500 line-through font-semibold">₹{pricing.original_price}</span>
+                                            <span className="text-xl font-black text-white">₹{pricing.offer_price}</span>
                                         </div>
-                                        <span className="text-[10px] text-emerald-400 font-bold block">Save ₹101 today</span>
+                                        {pricing.original_price > pricing.offer_price && (
+                                            <span className="text-[10px] text-emerald-400 font-bold block">
+                                                Save ₹{pricing.original_price - pricing.offer_price} today
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
 
@@ -348,17 +380,17 @@ export default function SignupPage() {
                                 <div className="pt-2 border-t border-zinc-800/80 space-y-1 text-[11px]">
                                     <div className="flex justify-between text-zinc-400">
                                         <span>Course Enrollment Fee</span>
-                                        <span className="text-zinc-300 font-medium">₹149.00</span>
+                                        <span className="text-zinc-300 font-medium">₹{pricing.offer_price.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-zinc-400">
                                         <span className="flex items-center gap-1">
-                                            Online Payment Gateway Fee (2%)
+                                            Online Payment Gateway Fee
                                         </span>
-                                        <span className="text-zinc-300 font-medium">+₹3.00</span>
+                                        <span className="text-zinc-300 font-medium">+₹{pricing.gateway_fee.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-xs font-bold text-white pt-1 border-t border-zinc-800/50">
                                         <span>Total Amount Payable</span>
-                                        <span className="text-blue-400 font-mono text-sm">₹152.00</span>
+                                        <span className="text-blue-400 font-mono text-sm">₹{pricing.total_amount.toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>

@@ -106,3 +106,33 @@ LEFT JOIN public.referral_usages ru
     ON rc.id = ru.referral_code_id AND ru.payment_status = 'paid'
 GROUP BY rc.id, rc.code, rc.creator_name, rc.creator_phone, rc.creator_email, rc.creator_college, rc.created_at
 ORDER BY total_paid_students DESC, rc.created_at DESC;
+
+-- =========================================================================
+-- 7. Platform Settings (Dynamic Batch Pricing, Discounts, Gateway Fees)
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS public.app_settings (
+    key VARCHAR(50) PRIMARY KEY,
+    value JSONB NOT NULL,
+    description TEXT,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read so signup page and APIs can fetch the latest batch pricing
+DROP POLICY IF EXISTS "Allow public read on app_settings" ON public.app_settings;
+CREATE POLICY "Allow public read on app_settings" ON public.app_settings
+FOR SELECT USING (true);
+
+-- Allow admins full access to update pricing
+DROP POLICY IF EXISTS "Allow service role full access on app_settings" ON public.app_settings;
+CREATE POLICY "Allow service role full access on app_settings" ON public.app_settings
+FOR ALL USING (true) WITH CHECK (true);
+
+-- Seed default pricing settings
+INSERT INTO public.app_settings (key, value, description)
+VALUES 
+    ('batch_pricing', '{"original_price": 250, "offer_price": 149, "gateway_fee": 3, "batch_name": "LevelOne Webdev Cohort", "discount_label": "40% OFF LAUNCH"}'::jsonb, 'Dynamic batch pricing configuration managed by admin')
+ON CONFLICT (key) DO NOTHING;
+
