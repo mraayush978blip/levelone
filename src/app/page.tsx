@@ -284,12 +284,15 @@ export default function HomePage() {
               <p className="text-zinc-400 text-xs leading-relaxed max-w-md">
                 Phase-based full-stack web development engineering cohort. Build production projects, compete in live benchmarks, and earn guaranteed internships.
               </p>
-              <div className="pt-2 flex flex-col sm:flex-row gap-4 text-xs font-mono text-zinc-400">
-                <a href="tel:+916266439162" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
+              <div className="pt-2 flex flex-wrap gap-x-5 gap-y-2 text-xs font-mono text-zinc-400">
+                <a href="tel:+916266439162" className="flex items-center gap-1.5 hover:text-blue-400 transition-colors">
                   <Phone className="w-3.5 h-3.5 text-blue-400" /> +91 6266439162
                 </a>
-                <a href="mailto:aayush@levelonedev.tech" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
+                <a href="mailto:aayush@levelonedev.tech" className="flex items-center gap-1.5 hover:text-blue-400 transition-colors">
                   <Mail className="w-3.5 h-3.5 text-blue-400" /> aayush@levelonedev.tech
+                </a>
+                <a href="mailto:aditya@levelonedev.tech" className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors">
+                  <Mail className="w-3.5 h-3.5 text-cyan-400" /> aditya@levelonedev.tech
                 </a>
               </div>
             </div>

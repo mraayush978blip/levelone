@@ -43,9 +43,12 @@ export default function ContactPage() {
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
               <Mail className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-white">Official Support Email</h3>
+            <h3 className="text-lg font-bold text-white">Official Support Emails</h3>
             <p className="text-xs text-zinc-400">Response time: Usually within 2 to 4 business hours</p>
-            <p className="text-blue-400 font-mono font-bold text-base pt-1">aayush@levelonedev.tech</p>
+            <div className="space-y-1 pt-1 font-mono text-sm font-bold">
+              <p><a href="mailto:aayush@levelonedev.tech" className="text-blue-400 hover:underline">aayush@levelonedev.tech</a></p>
+              <p><a href="mailto:aditya@levelonedev.tech" className="text-cyan-400 hover:underline">aditya@levelonedev.tech</a></p>
+            </div>
           </div>
         </div>
 
