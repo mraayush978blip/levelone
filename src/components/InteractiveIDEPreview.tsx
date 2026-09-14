@@ -96,7 +96,7 @@ export default function InteractiveIDEPreview() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto my-12 relative group">
+    <div className="w-full max-w-6xl 2xl:max-w-7xl mx-auto my-12 relative group">
       {/* Outer ambient holographic glow */}
       <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/30 via-cyan-500/20 to-indigo-600/30 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-700 pointer-events-none" />
 

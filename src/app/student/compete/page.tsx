@@ -75,36 +75,66 @@ export default function CompetePage() {
                     .eq('is_hidden_from_leaderboard', true);
                 const hiddenUserIds = new Set((hiddenUsers || []).map((u: any) => u.id));
 
-                const { data: lbData, error: lbError } = await supabase.rpc('get_leaderboard_v2');
-                if (lbError) {
-                    console.error('❌ [Compete] Leaderboard RPC Error:', lbError.code, lbError.message, lbError.details, lbError.hint);
-                    throw lbError;
+                try {
+                    const { data: lbData, error: lbError } = await supabase.rpc('get_leaderboard_v2');
+                    if (lbError) {
+                        console.warn('⚠️ [Compete] Leaderboard RPC Error, falling back to direct query:', lbError.message);
+                        // Fallback: fetch top students directly from users table
+                        const { data: fallbackUsers } = await supabase
+                            .from('users')
+                            .select('id, name, equipped_avatar, current_streak, points')
+                            .eq('role', 'student')
+                            .order('points', { ascending: false })
+                            .limit(20);
+
+                        const fallbackLB = (fallbackUsers || [])
+                            .filter((u: any) => !hiddenUserIds.has(u.id))
+                            .map((u: any) => ({
+                                id: u.id,
+                                name: u.name,
+                                avatar: u.equipped_avatar || '👤',
+                                current_streak: u.current_streak || 0,
+                                completed_phases: 0,
+                                activity_points: u.points || 0
+                            }));
+                        setLeaderboard(fallbackLB);
+                    } else {
+                        const processedLB = (lbData || [])
+                            .filter((entry: any) => !hiddenUserIds.has(entry.user_id))
+                            .map((entry: any) => ({
+                                id: entry.user_id,
+                                name: entry.user_name,
+                                avatar: entry.user_avatar || '👤',
+                                current_streak: entry.current_streak || 0,
+                                completed_phases: Number(entry.completed_phases) || 0,
+                                activity_points: entry.activity_points || 0
+                            }));
+                        setLeaderboard(processedLB);
+                    }
+                } catch (lbCatchErr) {
+                    console.warn('⚠️ [Compete] Leaderboard fetch exception:', lbCatchErr);
                 }
 
-                const processedLB = (lbData || [])
-                    .filter((entry: any) => !hiddenUserIds.has(entry.user_id))
-                    .map((entry: any) => ({
-                        id: entry.user_id,
-                        name: entry.user_name,
-                        avatar: entry.user_avatar || '👤',
-                        current_streak: entry.current_streak || 0,
-                        completed_phases: Number(entry.completed_phases) || 0,
-                        activity_points: entry.activity_points || 0
-                    }));
-                setLeaderboard(processedLB);
-
-                const { count } = await supabase
+                // Total student count (total cohort size)
+                const { count: studentCount } = await supabase
                     .from('users')
                     .select('*', { count: 'exact', head: true })
-                    .eq('role', 'student')
-                    .neq('is_hidden_from_leaderboard', true);
-                setTotalStudents(count || 0);
+                    .eq('role', 'student');
+                setTotalStudents(studentCount || 50);
 
-                const { data: phases } = await supabase.from('phases').select('phase_number, title, id').eq('is_active', true).order('phase_number', { ascending: true });
+                const { data: phases } = await supabase
+                    .from('phases')
+                    .select('phase_number, title, id')
+                    .eq('is_active', true)
+                    .order('phase_number', { ascending: true });
 
                 if (phases) {
                     const stats = await Promise.all(phases.map(async (p) => {
-                        const { count: completedCount } = await supabase.from('submissions').select('*', { count: 'exact', head: true }).eq('phase_id', p.id).eq('status', 'valid');
+                        const { count: completedCount } = await supabase
+                            .from('submissions')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('phase_id', p.id)
+                            .eq('status', 'valid');
                         return { phase_number: p.phase_number, title: p.title, completed_count: completedCount || 0 };
                     }));
                     setPhaseStats(stats);
@@ -118,7 +148,6 @@ export default function CompetePage() {
                     error: error
                 });
             } finally {
-
                 setLoading(false);
             }
         };
@@ -127,7 +156,7 @@ export default function CompetePage() {
 
     if (loading) {
         return (
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12 pb-24">
+            <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 py-8 sm:py-12 space-y-12 pb-24">
                 {/* Header skeleton */}
                 <div className="pb-6 border-b border-card-border space-y-3">
                     <Skeleton className="h-3 w-32" />
@@ -137,7 +166,7 @@ export default function CompetePage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left column */}
-                    <div className="lg:col-span-4 space-y-6">
+                    <div className="lg:col-span-4 xl:col-span-4 space-y-6">
                         {/* Streak card */}
                         <Skeleton className="h-44 w-full rounded-3xl" />
                         {/* Community progress */}
@@ -197,7 +226,7 @@ export default function CompetePage() {
     const isNeon = user?.equipped_theme === 'theme-neon';
 
     return (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12 sm:space-y-16 pb-24 relative z-10 text-foreground">
+        <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 py-8 sm:py-12 space-y-12 sm:space-y-16 pb-24 relative z-10 text-foreground">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 pb-6 sm:pb-8 border-b border-card-border">
                 <SlideUp>

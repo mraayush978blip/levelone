@@ -518,10 +518,10 @@ export const linkedInPosts: LinkedInPost[] = [
 
 export default function LinkedInShowcase() {
   const [showAll, setShowAll] = useState(false);
-  const displayedPosts = showAll ? linkedInPosts : linkedInPosts.slice(0, 6);
+  const displayedPosts = showAll ? linkedInPosts : linkedInPosts.slice(0, 8);
 
   return (
-    <section id="reviews" className="w-full max-w-7xl mx-auto mt-20 px-4 md:px-6 relative z-10">
+    <section id="reviews" className="w-full max-w-[1920px] mx-auto mt-20 px-4 sm:px-8 xl:px-12 relative z-10">
       {/* Background Ambient Radial Glow for LinkedIn Section */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[80%] bg-blue-500/10 rounded-full blur-[140px] pointer-events-none -z-10" />
 
@@ -541,7 +541,7 @@ export default function LinkedInShowcase() {
       </div>
 
       {/* Realistic LinkedIn Feed Cards Grid - Crisp, High Brightness Style */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
         {displayedPosts.map((post, idx) => (
           <motion.a
             key={post.id}

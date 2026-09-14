@@ -660,7 +660,7 @@ export default function PhaseDetailPage({ params }: PhasePageProps) {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-8 space-y-10 font-sans text-foreground">
+        <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 py-8 space-y-10 font-sans text-foreground">
             {/* Action Bar */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-card-border">
                 <Link href="/student" className="inline-flex items-center gap-2 group text-muted hover:text-primary transition-colors">

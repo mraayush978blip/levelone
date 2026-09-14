@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useCallback } from 'react';
-import { getPhaseStatus, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { getStudentPhaseProgression } from '@/lib/phase-progression';
 import AnimatedBackground from '@/components/ui/animated-background';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -169,7 +169,7 @@ export default function StudentDashboard() {
 
     if (loading) {
         return (
-            <div className="max-w-7xl mx-auto px-6 py-12 space-y-12 animate-pulse overflow-hidden">
+            <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 py-8 md:py-12 space-y-12 animate-pulse overflow-hidden">
                 <div className="h-48 bg-slate-100 dark:bg-slate-900 rounded-[2rem]" />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="md:col-span-2 space-y-8">
@@ -183,14 +183,17 @@ export default function StudentDashboard() {
         );
     }
 
-    const livePhasesCount = phases.filter((p: any) => getPhaseStatus(p.start_date, p.end_date, p.is_paused) === 'live').length;
+    // Active Phases: unlocked for this student and not yet submitted/resolved
+    const activePhasesCount = phases.filter((p: any) => progression.unlockedPhaseIds.has(p.id) && !submissions.has(p.id) && !p.is_paused).length;
+    // Upcoming Content: not yet unlocked in the progression journey
+    const upcomingPhasesCount = phases.filter((p: any) => !progression.unlockedPhaseIds.has(p.id)).length;
 
     return (
         <div className="relative min-h-[calc(100vh-80px)] font-sans text-foreground bg-[#050507] overflow-x-hidden">
             <AnimatedBackground theme={user?.equipped_theme} />
             <TrialModal />
 
-            <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-12 space-y-8 md:space-y-12 relative z-10">
+            <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 py-6 md:py-12 space-y-8 md:space-y-12 relative z-10">
 
                 {/* Clean Header */}
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-card-border">
@@ -466,7 +469,7 @@ export default function StudentDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted mb-1">Active Phases</p>
-                                        <p className="text-xl md:text-2xl font-black text-foreground">{livePhasesCount}</p>
+                                        <p className="text-xl md:text-2xl font-black text-foreground">{activePhasesCount}</p>
                                     </div>
                                 </div>
 
@@ -476,7 +479,7 @@ export default function StudentDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted mb-1">Upcoming Content</p>
-                                        <p className="text-xl md:text-2xl font-black text-foreground">{allPhases.filter(p => getPhaseStatus(p.start_date, p.end_date, p.is_paused) === 'upcoming').length}</p>
+                                        <p className="text-xl md:text-2xl font-black text-foreground">{upcomingPhasesCount}</p>
                                     </div>
                                 </div>
                             </div>

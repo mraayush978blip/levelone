@@ -175,7 +175,7 @@ export default function StorePage() {
 
     if (loading) {
         return (
-            <div className="max-w-6xl mx-auto px-6 py-12 space-y-16 pb-24">
+            <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 py-12 space-y-16 pb-24">
                 {/* Header skeleton */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-card-border">
                     <div className="space-y-3">
@@ -189,8 +189,8 @@ export default function StorePage() {
                 </div>
 
                 {/* Store grid skeleton — 8 cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {Array.from({ length: 8 }).map((_, i) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                    {Array.from({ length: 10 }).map((_, i) => (
                         <div key={i} className="bg-card border border-card-border rounded-3xl p-5 space-y-4">
                             {/* Item preview area */}
                             <Skeleton className="h-28 w-full rounded-2xl" />
@@ -215,7 +215,7 @@ export default function StorePage() {
     const isNeon = user?.equipped_theme === 'theme-neon';
 
     return (
-        <div className={cn("max-w-6xl mx-auto px-6 py-12 space-y-16 pb-24 relative z-10 text-foreground")}>
+        <div className={cn("max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 py-12 space-y-16 pb-24 relative z-10 text-foreground")}>
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-8 border-b border-card-border">
                 <SlideUp>
@@ -243,7 +243,7 @@ export default function StorePage() {
 
             {/* Store Grid */}
             <FadeIn delay={0.2}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                     {items.map((item) => (
                         <StoreItemCard
                             key={item.id}

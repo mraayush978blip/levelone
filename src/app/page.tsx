@@ -67,7 +67,7 @@ export default function HomePage() {
 
         {/* Top Navigation Bar */}
         <header className="w-full z-40 sticky top-0 backdrop-blur-xl border-b border-zinc-800/80 bg-[#050507]/80">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+          <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 h-16 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
               <img
                 src="/icon-ninja-round.webp"
@@ -110,7 +110,7 @@ export default function HomePage() {
         </header>
 
         {/* HERO SECTION */}
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 pt-16 md:pt-20 z-10 relative flex flex-col items-center text-center">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 xl:px-12 pt-16 md:pt-20 z-10 relative flex flex-col items-center text-center">
           {/* Tagline Badge */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -224,7 +224,7 @@ export default function HomePage() {
         <LinkedInShowcase />
 
         {/* HOW LEVELONE WORKS (Simple English, Clear Value) */}
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-6 py-20 z-10 relative">
+        <section className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 xl:px-12 py-20 z-10 relative">
           <div className="text-center max-w-3xl mx-auto mb-14">
             <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
               How You Learn With LevelOne
@@ -271,7 +271,7 @@ export default function HomePage() {
         </section>
 
         {/* BOTTOM FINAL CALL TO ACTION */}
-        <section className="w-full max-w-7xl mx-auto px-4 md:px-6 my-16 z-10 relative">
+        <section className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 xl:px-12 my-16 z-10 relative">
           <div className="rounded-2xl border border-zinc-800 bg-[#0e1217] p-8 md:p-12 text-center relative shadow-xl">
             <div className="max-w-2xl mx-auto space-y-5">
               <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
@@ -303,8 +303,8 @@ export default function HomePage() {
         </section>
 
         {/* FOOTER */}
-        <footer className="w-full border-t border-zinc-800/80 bg-[#030305] py-12 px-4 md:px-8 text-xs text-zinc-500 z-10 relative">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-left">
+        <footer className="w-full border-t border-zinc-800/80 bg-[#030305] py-12 px-4 sm:px-8 xl:px-12 text-xs text-zinc-500 z-10 relative">
+          <div className="max-w-[1920px] w-full mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-left">
             {/* Brand Col */}
             <div className="space-y-3 md:col-span-2">
               <Link href="/" className="inline-flex items-center gap-2.5 group">
@@ -356,7 +356,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto pt-6 border-t border-zinc-850 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="max-w-[1920px] w-full mx-auto pt-6 border-t border-zinc-850 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <p>© 2026 LevelOne Web Development Cohort. All rights reserved.</p>
             <p className="text-[11px] text-zinc-600">Secure Payments via Cashfree Payments & Razorpay</p>
           </div>

@@ -111,7 +111,7 @@ export default function StudentLayout({
             >
                 {!hideNavigation && (
                     <nav className="sticky top-0 pt-[env(safe-area-inset-top)] border-b border-card-border transition-all duration-300 z-50 backdrop-blur-xl bg-card/80 relative">
-                        <div className="max-w-7xl mx-auto px-6 relative z-10">
+                        <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 relative z-10">
                             <div className="flex justify-between h-20">
                                 <div className="flex items-center space-x-10">
                                     <Link href="/student" id="nav-logo" className="flex items-center space-x-3 group text-foreground">
@@ -195,7 +195,7 @@ export default function StudentLayout({
                 {!hideNavigation && (
                     <>
                         <footer className="hidden md:block py-16 border-t border-card-border transition-colors mt-auto bg-card text-foreground relative overflow-hidden">
-                            <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+                            <div className="max-w-[1920px] w-full mx-auto px-4 sm:px-8 xl:px-12 flex flex-col md:flex-row justify-between items-center gap-8">
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center gap-3">
                                         <img
