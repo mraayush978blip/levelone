@@ -68,20 +68,29 @@ export default function CompetePage() {
                 const { data: bData } = await supabase.from('badges').select('*');
                 setBadges(bData || []);
 
+                // Fetch list of hidden student IDs (client-level safeguard in case get_leaderboard_v2 RPC hasn't been refreshed in Supabase)
+                const { data: hiddenUsers } = await supabase
+                    .from('users')
+                    .select('id')
+                    .eq('is_hidden_from_leaderboard', true);
+                const hiddenUserIds = new Set((hiddenUsers || []).map((u: any) => u.id));
+
                 const { data: lbData, error: lbError } = await supabase.rpc('get_leaderboard_v2');
                 if (lbError) {
                     console.error('❌ [Compete] Leaderboard RPC Error:', lbError.code, lbError.message, lbError.details, lbError.hint);
                     throw lbError;
                 }
 
-                const processedLB = (lbData || []).map((entry: any) => ({
-                    id: entry.user_id,
-                    name: entry.user_name,
-                    avatar: entry.user_avatar || '👤',
-                    current_streak: entry.current_streak || 0,
-                    completed_phases: Number(entry.completed_phases) || 0,
-                    activity_points: entry.activity_points || 0
-                }));
+                const processedLB = (lbData || [])
+                    .filter((entry: any) => !hiddenUserIds.has(entry.user_id))
+                    .map((entry: any) => ({
+                        id: entry.user_id,
+                        name: entry.user_name,
+                        avatar: entry.user_avatar || '👤',
+                        current_streak: entry.current_streak || 0,
+                        completed_phases: Number(entry.completed_phases) || 0,
+                        activity_points: entry.activity_points || 0
+                    }));
                 setLeaderboard(processedLB);
 
                 const { count } = await supabase

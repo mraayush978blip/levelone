@@ -123,12 +123,13 @@ export default function StudentListPage() {
         const willHide = !student.is_hidden_from_leaderboard;
         setActionLoading(true);
         try {
-            const { error } = await supabase
-                .from('users')
-                .update({ is_hidden_from_leaderboard: willHide })
-                .eq('id', student.id);
-
-            if (error) throw error;
+            const res = await fetch('/api/admin/students/leaderboard-visibility', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentIds: [student.id], hide: willHide }),
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Failed to update visibility');
 
             setStudents(prev => prev.map(s => s.id === student.id ? { ...s, is_hidden_from_leaderboard: willHide } : s));
         } catch (err: any) {
@@ -151,19 +152,20 @@ export default function StudentListPage() {
 
         setActionLoading(true);
         try {
-            const { error } = await supabase
-                .from('users')
-                .update({ is_hidden_from_leaderboard: hide })
-                .in('id', ids);
-
-            if (error) throw error;
+            const res = await fetch('/api/admin/students/leaderboard-visibility', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentIds: ids, hide }),
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Failed to update visibility');
 
             alert(`Successfully ${hide ? 'hidden' : 'unhidden'} ${ids.length} student(s) from the leaderboard!`);
             setSelectedStudentIds(new Set());
             fetchStudents();
         } catch (err: any) {
             console.error('Error in bulk leaderboard visibility:', err);
-            alert('Failed to update leaderboard visibility.');
+            alert('Failed to update leaderboard visibility: ' + (err.message || 'Error'));
         } finally {
             setActionLoading(false);
         }
