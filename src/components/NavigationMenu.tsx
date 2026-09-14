@@ -156,8 +156,12 @@ export default function NavigationMenu() {
 
                                     <div className="w-full flex items-center justify-center p-4 rounded-xl border border-primary/10 bg-gradient-to-r from-primary/5 to-transparent relative overflow-hidden">
                                         <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 blur-xl rounded-full translate-x-1/2 -translate-y-1/2" />
-                                        <div className="flex items-center gap-2">
-                                            <Shield className="h-4 w-4 text-primary" />
+                                        <div className="flex items-center gap-2.5">
+                                            <img
+                                                src="/icon-ninja-round.webp"
+                                                alt="LevelOne Logo"
+                                                className="w-5 h-5 rounded-full object-cover border border-primary/30"
+                                            />
                                             <span className="text-xs font-black tracking-[0.2em] text-primary uppercase">LEVELONE</span>
                                         </div>
                                     </div>

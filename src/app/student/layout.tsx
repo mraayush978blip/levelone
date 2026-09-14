@@ -97,7 +97,7 @@ export default function StudentLayout({
         { href: '/student', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/student/compete', label: 'Compete', icon: Trophy },
         { href: '/student/store', label: 'Rewards', icon: ShoppingBag },
-        { href: '/student/help', label: 'AI Help', icon: Sparkles },
+        { href: '/student/help', label: 'LevelOne AI', icon: Sparkles },
     ];
 
     return (
@@ -198,11 +198,11 @@ export default function StudentLayout({
                             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-primary rounded-lg rotate-45 flex items-center justify-center border border-primary/20">
-                                            <div className="-rotate-45">
-                                                <Zap className="h-4 w-4 text-white fill-white" />
-                                            </div>
-                                        </div>
+                                        <img
+                                            src="/icon-ninja-round.webp"
+                                            alt="LevelOne Logo"
+                                            className="w-7 h-7 rounded-full object-cover shadow-[0_0_12px_rgba(59,130,246,0.3)] border border-primary/30"
+                                        />
                                         <span className="text-lg font-black tracking-tighter">LEVELONE</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-muted font-medium text-xs">

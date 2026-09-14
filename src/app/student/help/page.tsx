@@ -146,11 +146,13 @@ export default function AIHelpPage() {
                     </Link>
                     <div className="h-6 w-px bg-card-border" />
                     <div className="flex items-center gap-3">
-                        <div className="bg-primary p-2 rounded-xl shadow-sword">
-                            <Sparkles className="h-4 w-4 text-white" />
-                        </div>
+                        <img
+                            src="/icon-ninja-round.webp"
+                            alt="LevelOne AI"
+                            className="w-9 h-9 rounded-full object-cover shadow-[0_0_15px_rgba(59,130,246,0.4)] border border-primary/30"
+                        />
                         <div>
-                            <h1 className="text-sm font-black tracking-tight leading-none uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-md">AI Sensei</h1>
+                            <h1 className="text-sm font-black tracking-tight leading-none uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-md">LevelOne AI</h1>
                             <div className="flex items-center gap-1.5 mt-1">
                                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                                 <span className="text-[10px] font-bold text-blue-400/60 uppercase tracking-[0.2em] hidden sm:inline">High Performance Node</span>
@@ -193,12 +195,20 @@ export default function AIHelpPage() {
                                     msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                                 )}>
                                     <div className={cn(
-                                        "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-sm",
+                                        "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-sm overflow-hidden",
                                         msg.role === 'user'
                                             ? 'bg-card border border-card-border text-primary'
-                                            : 'bg-primary text-white'
+                                            : 'border border-primary/30'
                                     )}>
-                                        {msg.role === 'user' ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                                        {msg.role === 'user' ? (
+                                            <User className="h-4 w-4" />
+                                        ) : (
+                                            <img
+                                                src="/icon-ninja-round.webp"
+                                                alt="LevelOne AI"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        )}
                                     </div>
                                     <div className={cn(
                                         "relative px-4 py-3 rounded-2xl shadow-sm leading-relaxed text-sm",
@@ -225,8 +235,12 @@ export default function AIHelpPage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="flex justify-start items-center gap-4"
                         >
-                            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
-                                <Loader2 className="h-4 w-4 text-slate-400 animate-spin" />
+                            <div className="w-8 h-8 rounded-full overflow-hidden border border-primary/30 flex items-center justify-center">
+                                <img
+                                    src="/icon-ninja-round.webp"
+                                    alt="LevelOne AI"
+                                    className="w-full h-full object-cover animate-pulse"
+                                />
                             </div>
                             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2">
                                 <span className="flex gap-1">

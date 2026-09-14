@@ -307,12 +307,16 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-left">
             {/* Brand Col */}
             <div className="space-y-3 md:col-span-2">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+              <Link href="/" className="inline-flex items-center gap-2.5 group">
+                <img
+                  src="/icon-ninja-round.webp"
+                  alt="LevelOne Logo"
+                  className="w-7 h-7 rounded-full object-cover shadow-[0_0_12px_rgba(59,130,246,0.3)] border border-blue-500/30 group-hover:scale-105 transition-transform"
+                />
                 <span className="font-mono text-sm font-black text-white tracking-widest uppercase">
                   LevelOne
                 </span>
-              </div>
+              </Link>
               <p className="text-zinc-400 text-xs leading-relaxed max-w-md">
                 Phase-based full-stack web development engineering cohort. Curated high-impact learning path, competitive benchmarks, and guaranteed internships for top 3 rankers.
               </p>
