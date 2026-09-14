@@ -3,13 +3,13 @@ import Groq from 'groq-sdk';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // In-memory cache for phase data (avoids DB hit on every message)
-let phaseCache: { data: string; ts: number } | null = null;
+let phaseCache: { data: string; rawPhases: any[]; ts: number } | null = null;
 const PHASE_CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
-async function getPhaseContext(): Promise<string> {
+async function getPhaseContext(): Promise<{ text: string; phases: any[] }> {
     const now = Date.now();
     if (phaseCache && (now - phaseCache.ts) < PHASE_CACHE_TTL) {
-        return phaseCache.data;
+        return { text: phaseCache.data, phases: phaseCache.rawPhases };
     }
 
     try {
@@ -19,13 +19,12 @@ async function getPhaseContext(): Promise<string> {
             .order('phase_number', { ascending: true });
 
         if (error || !phases || phases.length === 0) {
-            return 'No phase data available at this time.';
+            return { text: 'No phase data available at this time.', phases: [] };
         }
 
-        const now = new Date();
+        const nowDate = new Date();
 
         const phaseText = phases.map(p => {
-            // Determine real status from dates (more reliable than the status field)
             const startDate = p.start_date ? new Date(p.start_date) : null;
             const endDate = p.end_date ? new Date(p.end_date) : null;
 
@@ -34,9 +33,9 @@ async function getPhaseContext(): Promise<string> {
                 statusLabel = '⏸️ PAUSED';
             } else if (!p.is_active) {
                 statusLabel = '❌ INACTIVE';
-            } else if (endDate && now > endDate) {
+            } else if (endDate && nowDate > endDate) {
                 statusLabel = '✅ COMPLETED';
-            } else if (startDate && now >= startDate) {
+            } else if (startDate && nowDate >= startDate) {
                 statusLabel = '🟢 LIVE NOW';
             } else {
                 statusLabel = '🔜 UPCOMING';
@@ -54,28 +53,27 @@ async function getPhaseContext(): Promise<string> {
             return lines.join('\n');
         }).join('\n\n');
 
-        // Count using same date-based logic
         const livePhases = phases.filter(p => {
             if (!p.is_active || p.is_paused) return false;
             const s = p.start_date ? new Date(p.start_date) : null;
             const e = p.end_date ? new Date(p.end_date) : null;
-            return s && now >= s && (!e || now <= e);
+            return s && nowDate >= s && (!e || nowDate <= e);
         });
         const upcomingPhases = phases.filter(p => {
             const s = p.start_date ? new Date(p.start_date) : null;
-            return p.is_active && !p.is_paused && s && now < s;
+            return p.is_active && !p.is_paused && s && nowDate < s;
         });
         const completedPhases = phases.filter(p => {
             const e = p.end_date ? new Date(p.end_date) : null;
-            return e && now > e;
+            return e && nowDate > e;
         });
 
         const result = `There are ${phases.length} total phases: ${livePhases.length} live, ${upcomingPhases.length} upcoming, ${completedPhases.length} completed.\n\n${phaseText}`;
-        phaseCache = { data: result, ts: Date.now() };
-        return result;
+        phaseCache = { data: result, rawPhases: phases, ts: Date.now() };
+        return { text: result, phases };
     } catch (err) {
         console.error('[AI] Failed to fetch phases:', err);
-        return 'Phase data temporarily unavailable.';
+        return { text: 'Phase data temporarily unavailable.', phases: [] };
     }
 }
 
@@ -90,24 +88,98 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 }
 
-function generateFallbackResponse(userPrompt: string, phaseContext: string): string {
-    const q = userPrompt.toLowerCase();
-    if (q.includes('who') && (q.includes('made') || q.includes('built') || q.includes('founder') || q.includes('developer') || q.includes('aayush'))) {
+function generateFallbackResponse(userPrompt: string, phaseContextText: string, rawPhases: any[]): string {
+    const q = userPrompt.toLowerCase().trim();
+
+    // 1. Greetings & Pleasantries (Do NOT dump whole phase list!)
+    const isGreeting = /^(hi|hii|hiii|hello|hey|heyy|namaste|hola|good\s+(morning|afternoon|evening)|wassup|sup)\b/i.test(q) && q.length < 35;
+    if (isGreeting) {
+        return `### ⚡ Hey Developer! Welcome to LevelOne AI\n\nI am your **LevelOne Learning & Academic Assistant**. How can I help you accelerate your journey today?\n\nHere are things you can ask me:\n- **"Explain Phase 8.1"** or **"What is React / JavaScript phase?"**\n- **"How does the 20-day pacing rule work?"**\n- **"Tell me about the Guaranteed Internships & 80% fee refund"**\n- **"Who built LevelOne?"** or **"How does Refer & Earn work?"**\n\nDrop your question below and let's get coding! 💻🚀`;
+    }
+
+    // 2. Who built / creator / founder / Aayush
+    if (q.includes('who') && (q.includes('made') || q.includes('built') || q.includes('founder') || q.includes('developer') || q.includes('aayush') || q.includes('owner'))) {
         return `### ⚡ Creator & Architect\n\nLevelOne was created, architected, and built by **Aayush Sharma** — Full-Stack Developer & Cyber Security engineer.\n\n- **Portfolio:** [itsaayushsharma.vercel.app](https://itsaayushsharma.vercel.app/)\n- **LinkedIn:** [Aayush Sharma](https://www.linkedin.com/in/aayush-sharma-2013d)\n- **Notable Projects:** Acropolis Attendance Management System, JARVIS AI assistant, LevelOne Platform.\n\nFeel free to connect with Aayush on LinkedIn! 🚀`;
     }
-    if (q.includes('intern') || q.includes('job') || q.includes('placement')) {
+
+    // 3. Specific Phase Query (e.g., "explain phase 8.1", "phase 4", "phase 2", "tell me about phase 8")
+    const phaseMatch = q.match(/phase\s*([0-9]+(?:\.[0-9]+)?)/i);
+    if (phaseMatch && rawPhases && rawPhases.length > 0) {
+        const targetNumStr = phaseMatch[1];
+        const targetPhase = rawPhases.find((p: any) => 
+            String(p.phase_number) === targetNumStr || 
+            String(p.phase_number).startsWith(targetNumStr + '.')
+        );
+
+        if (targetPhase) {
+            const startDate = targetPhase.start_date ? new Date(targetPhase.start_date).toLocaleDateString('en-IN') : 'TBA';
+            const endDate = targetPhase.end_date ? new Date(targetPhase.end_date).toLocaleDateString('en-IN') : 'TBA';
+
+            let response = `### 🚀 Phase ${targetPhase.phase_number}: ${targetPhase.title}\n\n`;
+            if (targetPhase.description) {
+                response += `**Overview & What You Will Learn:**\n${targetPhase.description}\n\n`;
+            }
+            if (targetPhase.youtube_url) {
+                response += `- 📺 **Curated Video Lecture:** [Watch Phase Stream](${targetPhase.youtube_url})\n`;
+            }
+            if (targetPhase.assignment_resource_url) {
+                response += `- 📁 **Assignment & Resources:** [Access Phase Material](${targetPhase.assignment_resource_url})\n`;
+            }
+            response += `- 📅 **Timeline:** Starts on \`${startDate}\` | Deadline on \`${endDate}\`\n\n`;
+            response += `> 💡 **Pro-Tip:** Make sure to complete and submit this phase inside your **20-day submission pacing window** to keep your learning streak active on the leaderboard!`;
+            return response;
+        }
+    }
+
+    // 4. Topic-specific phase search (e.g. "firebase", "supabase", "react", "html", "css", "javascript", "git", "linkedin", "postgres")
+    const techKeywords = ['firebase', 'supabase', 'react', 'javascript', 'html', 'css', 'postgres', 'git', 'linkedin', 'node', 'sql'];
+    const matchedTech = techKeywords.find(tech => q.includes(tech));
+    if (matchedTech && rawPhases && rawPhases.length > 0) {
+        const matchingPhases = rawPhases.filter((p: any) => 
+            (p.title && p.title.toLowerCase().includes(matchedTech)) || 
+            (p.description && p.description.toLowerCase().includes(matchedTech))
+        );
+
+        if (matchingPhases.length > 0) {
+            let response = `### 📚 LevelOne Phases covering ${matchedTech.toUpperCase()}\n\nHere are the milestones covering **${matchedTech.toUpperCase()}** in your curriculum:\n\n`;
+            matchingPhases.forEach((p: any) => {
+                response += `#### Phase ${p.phase_number}: ${p.title}\n`;
+                if (p.description) response += `- **Topic:** ${p.description}\n`;
+                if (p.youtube_url) response += `- **Video Stream:** [Watch Lecture](${p.youtube_url})\n`;
+                response += `\n`;
+            });
+            response += `> 💡 Open any of these phases from your **[Student Dashboard](/student)** to start watching and submitting assignments!`;
+            return response;
+        }
+    }
+
+    // 5. Refer & Earn inquiries
+    if (q.includes('refer') || q.includes('earn') || q.includes('ambassador') || q.includes('invite')) {
+        return `### 🎁 Student Referral & Ambassador Program\n\nLevelOne has an active **Refer & Earn** portal!\n\n- **Create Your Referral Code:** Go to the **[Referral Portal](/referral)** and generate your unique student referral code.\n- **Share With Peers:** Invite your friends or college classmates to join LevelOne.\n- **Track Conversions:** You can track live real-time enrollments made using your code directly on the referral page.\n- **Access Link:** Click **Refer & Earn** in the top navigation bar or visit \`/referral\` anytime!`;
+    }
+
+    // 6. Internships / Placement queries
+    if (q.includes('intern') || q.includes('job') || q.includes('placement') || q.includes('hire')) {
         return `### 🎯 LevelOne Internship Program\n\n- **Top 3 Performers:** The top 3 ranked developers on the cohort final benchmark compete for **Guaranteed Internships**!\n- **Selection Criteria:** Milestone completion speed, project code quality, and peer competition points.\n- **Keep Pushing:** Stay active, submit each phase on time, and climb the leaderboard! 💻🔥`;
     }
-    if (q.includes('refund') || q.includes('fee') || q.includes('money') || q.includes('price')) {
+
+    // 7. Refund / Fees / Pricing
+    if (q.includes('refund') || q.includes('fee') || q.includes('money') || q.includes('price') || q.includes('cost')) {
         return `### 💰 Reward & Refund Policy\n\n- **Top 10 Performers:** The top 10 students on the final cohort leaderboard get an **80% course fee refund** as a performance reward!\n- **Our Philosophy:** We reward disciplined coders who complete their milestones without quitting.`;
     }
-    if (q.includes('phase') || q.includes('syllabus') || q.includes('milestone')) {
-        return `### 🗺️ Cohort Phases & Roadmap\n\nLevelOne structures open-source learning into strict sequential milestones:\n\n${phaseContext}\n\n> 💡 **Tip:** Submit each phase within your 20-day pacing window to keep your access active!`;
+
+    // 8. General Roadmap / Full Syllabus overview (only when explicitly asked for full roadmap/syllabus)
+    if (q.includes('roadmap') || q.includes('syllabus') || q.includes('all phase') || q.includes('all phases') || q.includes('curriculum') || q === 'phases' || q === 'phase') {
+        return `### 🗺️ Cohort Phases & Roadmap\n\nLevelOne structures open-source learning into strict sequential milestones:\n\n${phaseContextText}\n\n> 💡 **Tip:** Submit each phase within your 20-day pacing window to keep your access active!`;
     }
-    if (q.includes('content') || q.includes('video') || q.includes('source') || q.includes('material')) {
+
+    // 9. Philosophy / Curated resources
+    if (q.includes('content') || q.includes('video') || q.includes('source') || q.includes('material') || q.includes('curated')) {
         return `### 📚 Curated Learning Philosophy\n\nWe transparently clarify that learning resources are curated from the world's highest-quality open tech materials.\n\n**The True Value:** We eliminate tutorial hell by structuring these into an intense 20-day milestone pacing, competitive leaderboards, and real internships for top performers!`;
     }
-    return `### ⚡ LevelOne AI Assistant\n\nI am currently operating in low-latency standby mode. Here is what you need to know:\n\n- **Phases & Roadmap:** Complete your active phase assignments on time (20 days per phase).\n- **Leaderboard:** Earn points through timely phase submissions.\n- **Top 3 Perks:** Guaranteed internships for top 3 rankers!\n- **80% Refund:** Top 10 rankers receive an 80% fee refund.\n- **Need Mentor Help?** Post your queries directly in our community channel or reach out to \`aayush@levelonedev.tech\`.`;
+
+    // 10. Default helpful response tailored to LevelOne
+    return `### ⚡ LevelOne AI Assistant\n\nI understand you are asking about: *"**${userPrompt.trim()}**"*\n\nHere is how I can guide you:\n- **Phases & Videos:** Ask me about any specific milestone (e.g. *"Explain Phase 8.1"* or *"What is React Phase?"*).\n- **20-Day Rule:** Complete and submit your active phase assignment within 20 days to keep your access active.\n- **Top 3 Perks:** Guaranteed internships for top 3 rankers on the cohort final test.\n- **Top 10 Perks:** 80% course fee refund for top 10 leaderboard performers.\n- **Need Mentor Help?** Reach out to \`aayush@levelonedev.tech\` or message directly in our community!`;
 }
 
 export async function POST(request: NextRequest) {
@@ -123,14 +195,14 @@ export async function POST(request: NextRequest) {
         }
 
         const latestUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
-        const phaseContext = await getPhaseContext();
+        const { text: phaseContextText, phases: rawPhases } = await getPhaseContext();
         const apiKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
 
         if (!apiKey) {
             console.warn('[AI API Route] GROQ_API_KEY not configured, serving knowledge fallback response.');
             return NextResponse.json({
                 success: true,
-                text: generateFallbackResponse(latestUserMsg, phaseContext)
+                text: generateFallbackResponse(latestUserMsg, phaseContextText, rawPhases)
             });
         }
 
@@ -215,7 +287,7 @@ When asked about the team, share all members based on the platform version. When
 - For all other questions, be a helpful, friendly, supportive learning assistant.
 
 === CURRENT PHASES (LIVE DATA) ===
-${phaseContext}
+${phaseContextText}
 
 When a student asks about a specific phase, its video content, or assignment — use the phase data above to give accurate, specific answers. Reference the YouTube video URL when relevant so students can find the right content. If a phase is paused or inactive, let the student know.`
                             },
@@ -245,7 +317,7 @@ When a student asks about a specific phase, its video content, or assignment —
         console.warn('[AI API Route] All models exhausted or timed out. Serving fallback response. Last error:', lastError?.message);
         return NextResponse.json({
             success: true,
-            text: generateFallbackResponse(latestUserMsg, phaseContext)
+            text: generateFallbackResponse(latestUserMsg, phaseContextText, rawPhases)
         });
 
     } catch (error: any) {

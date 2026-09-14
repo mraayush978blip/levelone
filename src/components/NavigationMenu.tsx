@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Menu, X, LogOut, Palette, ChevronRight, Sun, Zap, Check, Users, Bug, HelpCircle, Shield, Smartphone } from 'lucide-react';
+import { Menu, X, LogOut, Palette, ChevronRight, Sun, Zap, Check, Users, Bug, HelpCircle, Shield, Smartphone, Gift } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -113,6 +113,19 @@ export default function NavigationMenu() {
                                 </div>
 
                                 <div className="space-y-1">
+                                    <Link
+                                        href="/referral"
+                                        onClick={() => setIsOpen(false)}
+                                        className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-amber-500/10 text-amber-500 dark:text-amber-400 transition-all group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20">
+                                                <Gift className="h-4 w-4 text-amber-500" />
+                                            </div>
+                                            <span className="text-xs font-bold tracking-tight">Refer & Earn</span>
+                                        </div>
+                                        <ChevronRight className="h-3.5 w-3.5 opacity-0 group-hover:translate-x-0.5 transition-all" />
+                                    </Link>
                                     <Link
                                         href={`/team?from=${user?.role === 'admin' ? 'admin' : 'student'}`}
                                         onClick={() => setIsOpen(false)}
