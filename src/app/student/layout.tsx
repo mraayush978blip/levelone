@@ -115,11 +115,11 @@ export default function StudentLayout({
                             <div className="flex justify-between h-20">
                                 <div className="flex items-center space-x-10">
                                     <Link href="/student" id="nav-logo" className="flex items-center space-x-3 group text-foreground">
-                                        <div className="w-10 h-10 bg-primary rounded-xl rotate-45 flex items-center justify-center shadow-lg shadow-primary/30 group-hover:rotate-[135deg] transition-all duration-700">
-                                            <div className="-rotate-45 group-hover:-rotate-[135deg] transition-all duration-700">
-                                                <Zap className="h-5 w-5 text-white fill-white" />
-                                            </div>
-                                        </div>
+                                        <img
+                                            src="/icon-ninja-round.webp"
+                                            alt="LevelOne Logo"
+                                            className="w-10 h-10 rounded-full object-cover shadow-[0_0_15px_rgba(59,130,246,0.4)] border border-primary/30 group-hover:scale-105 transition-transform"
+                                        />
                                         <div className="flex flex-col">
                                             <span className="text-xl font-black tracking-[-0.05em] leading-none text-foreground">
                                                 LEVELONE

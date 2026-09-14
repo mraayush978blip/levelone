@@ -45,11 +45,16 @@ export default function AdminSidebar() {
     return (
         <>
             {/* Mobile Header Nav */}
-            <div className="md:hidden flex items-center justify-between bg-white border-b border-gray-200 px-4 py-4 shrink-0 shadow-sm z-30">
-                <div className="flex items-center">
+            <div className="md:hidden flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3 shrink-0 shadow-sm z-30">
+                <Link href="/admin" className="flex items-center gap-2">
+                    <img
+                        src="/icon-ninja-round.webp"
+                        alt="LevelOne Logo"
+                        className="w-7 h-7 rounded-full object-cover shadow-sm border border-blue-500/20"
+                    />
                     <span className="text-xl font-black text-gray-900 tracking-tighter">Levelone</span>
-                    <span className="ml-2 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded uppercase tracking-wider">Admin</span>
-                </div>
+                    <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded uppercase tracking-wider">Admin</span>
+                </Link>
                 <button onClick={() => setIsOpen(!isOpen)} className="text-gray-500 hover:text-gray-900 focus:outline-none p-1 rounded-md transition-colors">
                     {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </button>
@@ -70,10 +75,15 @@ export default function AdminSidebar() {
                 isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
             )}>
                 <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
-                    <div className="flex items-center flex-shrink-0 px-4 mb-8">
+                    <Link href="/admin" className="flex items-center gap-2.5 flex-shrink-0 px-4 mb-8">
+                        <img
+                            src="/icon-ninja-round.webp"
+                            alt="LevelOne Logo"
+                            className="w-8 h-8 rounded-full object-cover shadow-sm border border-blue-500/20"
+                        />
                         <span className="text-xl font-black text-gray-900 tracking-tighter">Levelone</span>
-                        <span className="ml-2 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded uppercase tracking-wider">Admin</span>
-                    </div>
+                        <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded uppercase tracking-wider">Admin</span>
+                    </Link>
                     <nav className="flex-1 px-2 space-y-1 bg-white">
                         {navItems.map((item) => {
                             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');

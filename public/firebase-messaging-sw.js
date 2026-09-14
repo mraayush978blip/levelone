@@ -23,8 +23,8 @@ try {
     const notificationTitle = payload.notification?.title || 'Levelone Notification';
     const notificationOptions = {
       body: payload.notification?.body || 'New announcement from Levelone',
-      icon: '/icon-ninja-round.png',
-      badge: '/icon-ninja-round.png',
+      icon: '/icon-ninja-round.webp',
+      badge: '/icon-ninja-round.webp',
       data: {
         url: payload.data?.url || '/student',
       },

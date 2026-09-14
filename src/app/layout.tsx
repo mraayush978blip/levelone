@@ -74,7 +74,7 @@ export const metadata: Metadata = {
     siteName: "LevelOne",
     images: [
       {
-        url: "/icon-ninja-round.png",
+        url: "/icon-ninja-round.webp",
         width: 800,
         height: 800,
         alt: "LevelOne Logo",
@@ -87,12 +87,12 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "LevelOne | Web Development Engineering Cohort",
     description: "LevelOne Web Development Bootcamp — Build production apps, master backend & frontend, and compete for top internships.",
-    images: ["/icon-ninja-round.png"],
+    images: ["/icon-ninja-round.webp"],
   },
   icons: {
-    icon: '/icon-ninja-round.png',
-    apple: '/icon-ninja-round.png',
-    shortcut: '/icon-ninja-round.png',
+    icon: '/icon-ninja-round.webp',
+    apple: '/icon-ninja-round.webp',
+    shortcut: '/icon-ninja-round.webp',
   },
   verification: {
     google: 'IaUidusALWKBeNQoaPCMPGKLQj_gDsU5K-fyZW_co_g',
@@ -123,7 +123,7 @@ export default function RootLayout({
                   "@id": "https://levelonedev.tech/#organization",
                   "name": "LevelOne",
                   "url": "https://levelonedev.tech",
-                  "logo": "https://levelonedev.tech/icon-ninja-round.png",
+                  "logo": "https://levelonedev.tech/icon-ninja-round.webp",
                   "description": "LevelOne is a competitive, phase-based web development engineering cohort. We structure the best open and industry-curated learning resources into milestone-driven progressive phases with live coding benchmarks and guaranteed internships for top 3 rankers.",
                   "founder": {
                     "@type": "Person",

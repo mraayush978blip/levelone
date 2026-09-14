@@ -92,9 +92,13 @@ export default function LoginPage() {
                 <div className="p-8 sm:p-10 flex-1">
                     {/* Header */}
                     <div className="flex flex-col items-center mb-8 text-center">
-                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 border border-primary/20">
-                            <Shield className="w-6 h-6 text-primary" />
-                        </div>
+                        <Link href="/" className="mb-5 group">
+                            <img
+                                src="/icon-ninja-round.webp"
+                                alt="LevelOne Logo"
+                                className="w-16 h-16 rounded-full object-cover shadow-[0_0_25px_rgba(59,130,246,0.35)] border-2 border-primary/30 group-hover:scale-105 transition-transform"
+                            />
+                        </Link>
                         <h1 className="text-2xl font-black text-foreground tracking-tight mb-1">
                             Welcome back
                         </h1>

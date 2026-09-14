@@ -68,14 +68,16 @@ export default function HomePage() {
         {/* Top Navigation Bar */}
         <header className="w-full z-40 sticky top-0 backdrop-blur-xl border-b border-zinc-800/80 bg-[#050507]/80">
           <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.4)]">
-                <Terminal className="w-4 h-4 text-white" />
-              </div>
+            <Link href="/" className="flex items-center gap-3 group">
+              <img
+                src="/icon-ninja-round.webp"
+                alt="LevelOne Logo"
+                className="w-9 h-9 rounded-full object-cover shadow-[0_0_15px_rgba(59,130,246,0.4)] border border-blue-500/30 group-hover:scale-105 transition-transform"
+              />
               <span className="font-bold text-lg tracking-tight text-white">
                 Level<span className="text-blue-400">One</span>
               </span>
-            </div>
+            </Link>
 
             <div className="flex items-center gap-3">
               <Link

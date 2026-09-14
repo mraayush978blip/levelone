@@ -221,8 +221,13 @@ export default function SignupPage() {
 
             <div className="w-full max-w-lg z-10">
                 {/* Brand */}
-                <div className="text-center mb-8">
-                    <Link href="/" className="inline-flex items-center gap-2 mb-3">
+                <div className="text-center mb-8 flex flex-col items-center">
+                    <Link href="/" className="inline-flex items-center gap-2.5 mb-3 group">
+                        <img
+                            src="/icon-ninja-round.webp"
+                            alt="LevelOne Logo"
+                            className="w-10 h-10 rounded-full object-cover shadow-[0_0_20px_rgba(59,130,246,0.35)] border border-blue-500/30 group-hover:scale-105 transition-transform"
+                        />
                         <span className="text-2xl font-black text-white tracking-tighter">Levelone</span>
                         <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-widest bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-md">
                             ENROLLMENT
