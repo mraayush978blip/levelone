@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import NeonLoader from '@/components/NeonLoader';
+import { sendAppealNotificationEmail } from '@/actions/sendAppealNotificationEmail';
 
 export default function RevokedPage() {
     const { user, signOut } = useAuth();
@@ -121,6 +122,17 @@ export default function RevokedPage() {
             });
 
             if (error) throw error;
+
+            // Send notification email to admin (aayush@levelonedev.tech)
+            sendAppealNotificationEmail({
+                studentName: user?.name || 'Unknown Student',
+                studentEmail: user?.email || '',
+                rollNumber: user?.roll_number,
+                phaseNumber: missingPhase?.phase_number,
+                phaseTitle: missingPhase?.title,
+                reason: reasonText.trim()
+            }).catch(err => console.error('[RevokedPage] Failed to send appeal notification email:', err));
+
             setReasonText('');
             await fetchRevokeDetails(); // Refresh to get the new appeal
         } catch (err: any) {
