@@ -25,8 +25,28 @@ export default function HomePage() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
+  // Dynamic pricing state managed by Admin (/admin/pricing)
+  const [pricing, setPricing] = useState({
+    original_price: 250,
+    offer_price: 149,
+    discount_label: 'Launch Offer (One-Time)',
+  });
+
   useEffect(() => {
     setIsMounted(true);
+
+    fetch('/api/admin/pricing')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && (data.offer_price || data.total_amount)) {
+          setPricing({
+            original_price: Number(data.original_price) || 250,
+            offer_price: Number(data.offer_price) || 149,
+            discount_label: data.discount_label || 'Launch Offer (One-Time)',
+          });
+        }
+      })
+      .catch((err) => console.warn('[HomePage] Pricing fetch fallback:', err));
   }, []);
 
   useEffect(() => {
@@ -80,7 +100,7 @@ export default function HomePage() {
                 href="/signup"
                 className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs tracking-wide shadow-md transition-all active:scale-95"
               >
-                Enroll Now (₹149)
+                Enroll Now (₹{pricing.offer_price})
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -94,9 +114,9 @@ export default function HomePage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-400 mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-xs text-blue-400 font-medium mb-6 backdrop-blur-md"
           >
-            <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
             <span>Interactive Web Development Learning</span>
           </motion.div>
 
@@ -119,7 +139,7 @@ export default function HomePage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mt-5 max-w-2xl text-zinc-300 text-base md:text-lg leading-relaxed"
           >
-            Practice with hands-on coding tasks, clear roadmaps, and timed tests. Build projects you can proudly share with the world.
+            Practice with handpicked, industry-curated curriculum, structured roadmaps, and timed phases. Compete with peers, build production apps, and unlock guaranteed internships.
           </motion.p>
 
           {/* Action CTAs */}
@@ -134,7 +154,7 @@ export default function HomePage() {
               className="w-full sm:w-auto inline-flex h-13 items-center justify-center px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-[0_0_25px_rgba(59,130,246,0.3)] transition-all active:scale-95"
             >
               <Rocket className="w-4 h-4 mr-2" />
-              Enroll Today (₹149)
+              Enroll Today (₹{pricing.offer_price})
               <ArrowRight className="h-4 w-4 ml-2" />
             </Link>
 
@@ -179,10 +199,10 @@ export default function HomePage() {
             </div>
             <div className="p-4 rounded-xl bg-[#0e1217]/90 border border-zinc-800/80">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-sm text-zinc-500 line-through font-semibold">₹250</span>
-                <span className="text-2xl font-bold text-cyan-400">₹149</span>
+                <span className="text-sm text-zinc-500 line-through font-semibold">₹{pricing.original_price}</span>
+                <span className="text-2xl font-bold text-cyan-400">₹{pricing.offer_price}</span>
               </div>
-              <div className="text-xs text-emerald-400 mt-1 font-semibold">Launch Offer (One-Time)</div>
+              <div className="text-xs text-emerald-400 mt-1 font-semibold">{pricing.discount_label}</div>
             </div>
           </motion.div>
 
@@ -208,7 +228,7 @@ export default function HomePage() {
               How You Learn With LevelOne
             </h2>
             <p className="mt-3 text-zinc-400 text-sm md:text-base leading-relaxed">
-              Step-by-step learning designed to make you confident in building websites.
+              We structure the best open resources into an intense competitive arena so you finish with proof of work.
             </p>
           </div>
 
@@ -218,9 +238,9 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center mb-4 font-bold text-sm">
                 1
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Learn Step by Step</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Curated Industry Material</h3>
               <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
-                Watch clear video lessons and follow structured guidelines for HTML, CSS, JavaScript, and React.
+                Rather than reinventing basic lectures, we curate top-tier resources, filter the noise, and structure them into timed progressive phases.
               </p>
             </div>
 
@@ -229,9 +249,9 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 font-bold text-sm">
                 2
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Submit Assignments on Time</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Timed Pacing & Competition</h3>
               <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
-                Finish Phase 1 to unlock Phase 2. Once in Phase 2, you have 20 days from your enrollment to complete your tasks.
+                Submit assignments on time to unlock the next phase. Compete on the live leaderboard with streaks, points, and milestones.
               </p>
             </div>
 
@@ -240,9 +260,9 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 font-bold text-sm">
                 3
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Share & Grow on LinkedIn</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Guaranteed Internships</h3>
               <p className="text-zinc-400 text-xs md:text-sm leading-relaxed">
-                Post your milestones on LinkedIn, build your professional network, and get recognized for your achievements.
+                Top 3 performers in the final testing benchmark earn guaranteed internships, and Top 10 secure an 80% fee refund.
               </p>
             </div>
           </div>
@@ -266,7 +286,7 @@ export default function HomePage() {
                   className="w-full sm:w-auto inline-flex h-12 items-center justify-center px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-all shadow-md active:scale-95"
                 >
                   <Rocket className="w-4 h-4 mr-2" />
-                  Enroll Now (₹149)
+                  Enroll Now (₹{pricing.offer_price})
                 </Link>
                 <Link
                   href="/team"
@@ -292,7 +312,7 @@ export default function HomePage() {
                 </span>
               </div>
               <p className="text-zinc-400 text-xs leading-relaxed max-w-md">
-                Phase-based full-stack web development engineering cohort. Build production projects, compete in live benchmarks, and earn guaranteed internships.
+                Phase-based full-stack web development engineering cohort. Curated high-impact learning path, competitive benchmarks, and guaranteed internships for top 3 rankers.
               </p>
               <div className="pt-2 flex flex-wrap gap-x-5 gap-y-2 text-xs font-mono text-zinc-400">
                 <a href="tel:+916266439162" className="flex items-center gap-1.5 hover:text-blue-400 transition-colors">
@@ -311,7 +331,7 @@ export default function HomePage() {
             <div className="space-y-3">
               <h4 className="text-white font-bold tracking-wider uppercase text-[11px]">Platform</h4>
               <ul className="space-y-2 text-zinc-400">
-                <li><Link href="/signup" className="hover:text-blue-400 transition-colors">Enroll (₹149)</Link></li>
+                <li><Link href="/signup" className="hover:text-blue-400 transition-colors">Enroll (₹{pricing.offer_price})</Link></li>
                 <li><Link href="/login" className="hover:text-blue-400 transition-colors">Student Login</Link></li>
                 <li><Link href="/team" className="hover:text-blue-400 transition-colors">Meet Our Team</Link></li>
                 <li><Link href="/install" className="hover:text-blue-400 transition-colors">Install App</Link></li>

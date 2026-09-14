@@ -161,6 +161,20 @@ export async function POST(request: Request) {
             console.warn('[Cashfree Verify & Register] Could not log to payments table:', payErr);
         }
 
+        // 7. Send Welcome Email (Fire and forget - don't block signup on email failure)
+        try {
+            const { sendWelcomeEmail } = await import('@/actions/sendWelcomeEmail');
+            sendWelcomeEmail({
+                studentEmail: normalizedEmail,
+                studentName: name.trim(),
+                rollNumber: studentUid,
+            }).catch((emailErr) => {
+                console.warn('[Cashfree Verify & Register] Welcome email trigger failed (non-blocking):', emailErr);
+            });
+        } catch (mailImportErr) {
+            console.warn('[Cashfree Verify & Register] Could not load sendWelcomeEmail:', mailImportErr);
+        }
+
         return NextResponse.json({
             success: true,
             user: {

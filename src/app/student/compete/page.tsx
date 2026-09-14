@@ -84,7 +84,11 @@ export default function CompetePage() {
                 }));
                 setLeaderboard(processedLB);
 
-                const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'student');
+                const { count } = await supabase
+                    .from('users')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('role', 'student')
+                    .neq('is_hidden_from_leaderboard', true);
                 setTotalStudents(count || 0);
 
                 const { data: phases } = await supabase.from('phases').select('phase_number, title, id').eq('is_active', true).order('phase_number', { ascending: true });

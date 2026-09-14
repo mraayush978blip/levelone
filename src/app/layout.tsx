@@ -117,17 +117,45 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "EducationalOrganization",
-              "name": "LevelOne",
-              "url": "https://levelonedev.tech",
-              "logo": "https://levelonedev.tech/icon-ninja-round.png",
-              "description": "LevelOne Webdev Bootcamp & Engineering Cohort with guaranteed internships and project-based challenges.",
-              "founder": {
-                "@type": "Person",
-                "name": "Aayush Sharma"
-              },
-              "sameAs": [
-                "https://github.com/mraayush978blip/levelone"
+              "@graph": [
+                {
+                  "@type": "EducationalOrganization",
+                  "@id": "https://levelonedev.tech/#organization",
+                  "name": "LevelOne",
+                  "url": "https://levelonedev.tech",
+                  "logo": "https://levelonedev.tech/icon-ninja-round.png",
+                  "description": "LevelOne is a competitive, phase-based web development engineering cohort. We structure the best open and industry-curated learning resources into milestone-driven progressive phases with live coding benchmarks and guaranteed internships for top 3 rankers.",
+                  "founder": {
+                    "@type": "Person",
+                    "@id": "https://levelonedev.tech/#founder",
+                    "name": "Aayush Sharma",
+                    "jobTitle": "Founder & Lead Architect",
+                    "description": "Full Stack Developer, Cybersecurity Engineer, and Creator of LevelOne and Acropolis Attendance Management System.",
+                    "url": "https://itsaayushsharma.vercel.app/",
+                    "sameAs": [
+                      "https://www.linkedin.com/in/aayush-sharma-2013d",
+                      "https://github.com/mraayush978blip"
+                    ]
+                  },
+                  "sameAs": [
+                    "https://github.com/mraayush978blip/levelone"
+                  ]
+                },
+                {
+                  "@type": "Course",
+                  "name": "LevelOne Full-Stack Web Development Cohort",
+                  "description": "Intensive milestone-driven cohort covering HTML, CSS, JavaScript, React, and Full-Stack Engineering using curated resources and competitive 20-day phase pacing with guaranteed internships for top 3 rankers.",
+                  "provider": {
+                    "@id": "https://levelonedev.tech/#organization"
+                  },
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "149",
+                    "priceCurrency": "INR",
+                    "availability": "https://schema.org/InStock",
+                    "validFrom": "2026-09-01"
+                  }
+                }
               ]
             })
           }}

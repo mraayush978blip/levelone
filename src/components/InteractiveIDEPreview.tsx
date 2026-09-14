@@ -124,7 +124,6 @@ export default function InteractiveIDEPreview() {
             <button
               onClick={() => {
                 setActiveSnippetKey('challenge1');
-                setHasRun(true);
               }}
               className={`px-3 py-1 text-xs font-mono rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeSnippetKey === 'challenge1'

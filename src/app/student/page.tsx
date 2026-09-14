@@ -261,7 +261,22 @@ export default function StudentDashboard() {
                                 />
                             </div>
 
-                            {phases.map((phase: Phase) => {
+                            {(() => {
+                                // Progressive Disclosure: Show all unlocked phases + strictly the single next locked phase
+                                const visiblePhases: Phase[] = [];
+                                let firstLockedShown = false;
+
+                                for (const p of phases) {
+                                    const isUnlocked = progression.unlockedPhaseIds.has(p.id);
+                                    if (isUnlocked) {
+                                        visiblePhases.push(p);
+                                    } else if (!firstLockedShown) {
+                                        visiblePhases.push(p);
+                                        firstLockedShown = true;
+                                    }
+                                }
+
+                                return visiblePhases.map((phase: Phase) => {
                                 const isUnlockedByProgress = progression.unlockedPhaseIds.has(phase.id);
                                 const isCompleted = submissions.has(phase.id);
                                 const isPaused = phase.is_paused;
@@ -404,7 +419,8 @@ export default function StudentDashboard() {
                                         </div>
                                     </motion.div>
                                 );
-                            })}
+                            });
+                            })()}
                         </div>
                     </div>
 

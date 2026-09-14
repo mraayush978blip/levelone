@@ -30,6 +30,7 @@ export interface User {
   equipped_avatar?: string;
   used_referral_code?: string;
   payment_method?: string;
+  is_hidden_from_leaderboard?: boolean;
 }
 
 // Phase Option Interface

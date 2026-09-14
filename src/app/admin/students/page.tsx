@@ -8,7 +8,10 @@ import {
     Filter,
     Users as UsersIcon,
     Shield,
-    ShieldOff
+    ShieldOff,
+    EyeOff,
+    CheckSquare,
+    Square
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types/database';
@@ -19,6 +22,9 @@ export default function StudentListPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'revoked'>('all');
     const [actionLoading, setActionLoading] = useState(false);
+
+    // Multi-selection state
+    const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         fetchStudents();
@@ -91,7 +97,7 @@ export default function StudentListPage() {
 
                 if (error) throw error;
 
-                // Fire-and-forget: log the revoke action (don't block on failure)
+                // Fire-and-forget: log the revoke action
                 supabase.auth.getUser().then(({ data }) => {
                     supabase.from('activity_logs').insert({
                         student_id: student.id,
@@ -107,6 +113,57 @@ export default function StudentListPage() {
         } catch (error) {
             console.error('Error updating student status:', error);
             alert('Failed to update student status.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Toggle individual leaderboard visibility
+    const toggleLeaderboardVisibility = async (student: User) => {
+        const willHide = !student.is_hidden_from_leaderboard;
+        setActionLoading(true);
+        try {
+            const { error } = await supabase
+                .from('users')
+                .update({ is_hidden_from_leaderboard: willHide })
+                .eq('id', student.id);
+
+            if (error) throw error;
+
+            setStudents(prev => prev.map(s => s.id === student.id ? { ...s, is_hidden_from_leaderboard: willHide } : s));
+        } catch (err: any) {
+            console.error('Error toggling leaderboard visibility:', err);
+            alert('Failed to update leaderboard visibility: ' + (err.message || 'Error'));
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // Bulk Leaderboard Hide / Unhide
+    const handleBulkLeaderboardVisibility = async (hide: boolean) => {
+        const ids = Array.from(selectedStudentIds);
+        if (ids.length === 0) {
+            alert('Please select at least one student.');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to ${hide ? 'HIDE' : 'UNHIDE'} ${ids.length} selected student(s) from the leaderboard?`)) return;
+
+        setActionLoading(true);
+        try {
+            const { error } = await supabase
+                .from('users')
+                .update({ is_hidden_from_leaderboard: hide })
+                .in('id', ids);
+
+            if (error) throw error;
+
+            alert(`Successfully ${hide ? 'hidden' : 'unhidden'} ${ids.length} student(s) from the leaderboard!`);
+            setSelectedStudentIds(new Set());
+            fetchStudents();
+        } catch (err: any) {
+            console.error('Error in bulk leaderboard visibility:', err);
+            alert('Failed to update leaderboard visibility.');
         } finally {
             setActionLoading(false);
         }
@@ -171,21 +228,45 @@ export default function StudentListPage() {
         return matchesSearch && matchesFilter;
     });
 
+    // Checkbox helper functions
+    const isAllSelected = filteredStudents.length > 0 && filteredStudents.every(s => selectedStudentIds.has(s.id));
+    const isSomeSelected = filteredStudents.some(s => selectedStudentIds.has(s.id)) && !isAllSelected;
+
+    const toggleSelectAll = () => {
+        if (isAllSelected) {
+            setSelectedStudentIds(new Set());
+        } else {
+            const allIds = new Set(filteredStudents.map(s => s.id));
+            setSelectedStudentIds(allIds);
+        }
+    };
+
+    const toggleSelectOne = (id: string) => {
+        const updated = new Set(selectedStudentIds);
+        if (updated.has(id)) {
+            updated.delete(id);
+        } else {
+            updated.add(id);
+        }
+        setSelectedStudentIds(updated);
+    };
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Student Management</h1>
                     <p className="mt-1 text-sm text-gray-500">
-                        View and manage student access and progress.
+                        View, search, and manage student access and leaderboard visibility.
                     </p>
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm">
+                <div className="flex items-center space-x-2 text-sm text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm w-fit">
                     <UsersIcon className="h-4 w-4" />
                     <span>{students.length} Total Students</span>
                 </div>
             </div>
 
+            {/* Filter and Global Action Row */}
             <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                 <div className="relative w-full lg:max-w-md">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -231,6 +312,40 @@ export default function StudentListPage() {
                 </div>
             </div>
 
+            {/* Bulk Selection Actions Bar (Appears when >=1 selected) */}
+            {selectedStudentIds.size > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-blue-50 border border-blue-200 px-4 py-3 rounded-lg animate-fade-in text-blue-900">
+                    <div className="flex items-center gap-2 font-semibold text-sm">
+                        <CheckSquare className="w-4 h-4 text-blue-600" />
+                        <span>{selectedStudentIds.size} student(s) selected</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => handleBulkLeaderboardVisibility(true)}
+                            disabled={actionLoading}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-colors"
+                        >
+                            <EyeOff className="w-3.5 h-3.5" />
+                            Hide from Leaderboard
+                        </button>
+                        <button
+                            onClick={() => handleBulkLeaderboardVisibility(false)}
+                            disabled={actionLoading}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors"
+                        >
+                            <Eye className="w-3.5 h-3.5" />
+                            Unhide on Leaderboard
+                        </button>
+                        <button
+                            onClick={() => setSelectedStudentIds(new Set())}
+                            className="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:underline"
+                        >
+                            Clear Selection
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {loading ? (
                 <div className="flex justify-center items-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -246,6 +361,23 @@ export default function StudentListPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
+                                {/* Select All Checkbox */}
+                                <th scope="col" className="px-4 py-3 text-center w-10">
+                                    <button
+                                        type="button"
+                                        onClick={toggleSelectAll}
+                                        className="text-gray-500 hover:text-blue-600 focus:outline-none"
+                                        title={isAllSelected ? "Deselect All" : "Select All"}
+                                    >
+                                        {isAllSelected ? (
+                                            <CheckSquare className="w-5 h-5 text-blue-600" />
+                                        ) : isSomeSelected ? (
+                                            <div className="w-4 h-4 bg-blue-600 rounded-sm mx-auto flex items-center justify-center text-white text-[10px] font-bold">-</div>
+                                        ) : (
+                                            <Square className="w-5 h-5 text-gray-400" />
+                                        )}
+                                    </button>
+                                </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Name / Email
                                 </th>
@@ -259,77 +391,125 @@ export default function StudentListPage() {
                                     Status
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Leaderboard
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Payment / Source
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Joined Date
                                 </th>
-                                <th scope="col" className="relative px-6 py-3">
+                                <th scope="col" className="relative px-6 py-3 text-right">
                                     <span className="sr-only">Actions</span>
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredStudents.map((student) => (
-                                <tr key={student.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div>
-                                                <div className="text-sm font-bold text-gray-900">{student.name}</div>
-                                                <div className="text-sm text-gray-500">{student.email}</div>
+                            {filteredStudents.map((student) => {
+                                const isSelected = selectedStudentIds.has(student.id);
+                                const isHidden = !!student.is_hidden_from_leaderboard;
+
+                                return (
+                                    <tr key={student.id} className={isSelected ? "bg-blue-50/50" : ""}>
+                                        {/* Individual Checkbox */}
+                                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleSelectOne(student.id)}
+                                                className="text-gray-400 hover:text-blue-600 focus:outline-none"
+                                            >
+                                                {isSelected ? (
+                                                    <CheckSquare className="w-5 h-5 text-blue-600" />
+                                                ) : (
+                                                    <Square className="w-5 h-5 text-gray-300" />
+                                                )}
+                                            </button>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div>
+                                                    <div className="text-sm font-bold text-gray-900">{student.name}</div>
+                                                    <div className="text-sm text-gray-500">{student.email}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900 font-medium">{student.roll_number || '-'}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500">{student.phone || '-'}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${student.status === 'active'
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-red-100 text-red-800'
-                                            }`}>
-                                            {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-xs">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md w-fit">
-                                                ⚡ Online Pay (₹152)
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900 font-medium">{student.roll_number || '-'}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-500">{student.phone || '-'}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${student.status === 'active'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
                                             </span>
-                                            {student.used_referral_code ? (
-                                                <span className="text-[11px] text-blue-600 font-mono font-semibold">
-                                                    Ref: {student.used_referral_code}
+                                        </td>
+                                        {/* Leaderboard Visibility Status & Toggle */}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleLeaderboardVisibility(student)}
+                                                disabled={actionLoading}
+                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all border ${
+                                                    isHidden
+                                                        ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                                                        : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                                                }`}
+                                                title={isHidden ? "Currently hidden. Click to show on leaderboard" : "Currently visible. Click to hide from leaderboard"}
+                                            >
+                                                {isHidden ? (
+                                                    <>
+                                                        <EyeOff className="w-3.5 h-3.5 text-amber-600" />
+                                                        <span>Hidden</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                                                        <span>Visible</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md w-fit">
+                                                    ⚡ Online Pay (₹152)
                                                 </span>
-                                            ) : (
-                                                <span className="text-[10px] text-gray-400">Direct Signup</span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {new Date(student.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                        <Link
-                                            href={`/admin/students/${student.id}`}
-                                            className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                                            title="View Details"
-                                        >
-                                            <Eye className="h-5 w-5" />
-                                        </Link>
-                                        <button
-                                            onClick={() => toggleStudentStatus(student)}
-                                            className={`${student.status === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
-                                                } inline-flex items-center`}
-                                            title={student.status === 'active' ? 'Revoke Access' : 'Restore Access'}
-                                        >
-                                            {student.status === 'active' ? <ShieldOff className="h-5 w-5" /> : <Shield className="h-5 w-5" />}
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                                                {student.used_referral_code ? (
+                                                    <span className="text-[11px] text-blue-600 font-mono font-semibold">
+                                                        Ref: {student.used_referral_code}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[10px] text-gray-400">Direct Signup</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {new Date(student.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                            <Link
+                                                href={`/admin/students/${student.id}`}
+                                                className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                                                title="View Details"
+                                            >
+                                                <Eye className="h-5 w-5" />
+                                            </Link>
+                                            <button
+                                                onClick={() => toggleStudentStatus(student)}
+                                                className={`${student.status === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
+                                                    } inline-flex items-center`}
+                                                title={student.status === 'active' ? 'Revoke Access' : 'Restore Access'}
+                                            >
+                                                {student.status === 'active' ? <ShieldOff className="h-5 w-5" /> : <Shield className="h-5 w-5" />}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
