@@ -26,6 +26,47 @@ export default function PremiumPlayer({ url, phaseId, studentId, initialProgress
 
     useEffect(() => {
         setIsClient(true);
+
+        const handleFullscreenChange = () => {
+            const isFullscreen = !!(
+                document.fullscreenElement ||
+                (document as any).webkitFullscreenElement ||
+                (document as any).mozFullScreenElement ||
+                (document as any).msFullscreenElement
+            );
+
+            if (isFullscreen) {
+                // When entering fullscreen on mobile, request landscape orientation
+                try {
+                    const orientation = window.screen?.orientation as any;
+                    if (orientation && typeof orientation.lock === 'function') {
+                        orientation.lock('landscape').catch(() => {
+                            // Silently ignore if browser/OS restricts orientation lock
+                        });
+                    }
+                } catch {
+                    // Ignore unsupported errors
+                }
+            } else {
+                // When exiting fullscreen, unlock orientation back to natural/portrait
+                try {
+                    const orientation = window.screen?.orientation as any;
+                    if (orientation && typeof orientation.unlock === 'function') {
+                        orientation.unlock();
+                    }
+                } catch {
+                    // Ignore unsupported errors
+                }
+            }
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
     }, []);
 
     const saveProgress = useCallback(async (seconds: number) => {
@@ -55,7 +96,7 @@ export default function PremiumPlayer({ url, phaseId, studentId, initialProgress
     // YouTube: plain iframe — most reliable possible approach
     if (youtubeId) {
         const startParam = initialProgress > 5 ? `&start=${Math.floor(initialProgress)}` : '';
-        const embedUrl = `https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&enablejsapi=0${startParam}`;
+        const embedUrl = `https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&enablejsapi=1&playsinline=1${startParam}`;
 
         return (
             <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-slate-200 dark:border-slate-800 shadow-md">
@@ -67,7 +108,7 @@ export default function PremiumPlayer({ url, phaseId, studentId, initialProgress
                 <iframe
                     src={embedUrl}
                     title="Video Player"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                     allowFullScreen
                     className="absolute inset-0 w-full h-full border-0"
                     loading="lazy"
