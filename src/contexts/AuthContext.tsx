@@ -9,7 +9,7 @@ interface AuthContextType {
     user: User | null;
     supabaseUser: SupabaseUser | null;
     loading: boolean;
-    signIn: (email: string, password: string) => Promise<void>;
+    signIn: (email: string, password: string) => Promise<User | null>;
     signOut: () => Promise<void>;
     refreshUser: () => Promise<void>;
     updateTheme: (theme: string) => Promise<void>;
@@ -113,21 +113,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             if (userData) {
-                // If userRef is null, it means this is initial load. If it matches, it's a refresh.
-                if (!userRef.current || userRef.current.id === userId) {
-                    console.log('✅ [Auth] Profile loaded successfully for:', userData.email);
-                    const newUser = userData as User;
-                    setUser(newUser);
-                    userRef.current = newUser;
-                    if (newUser.equipped_theme) {
-                        localStorage.setItem('levelone-theme', newUser.equipped_theme);
-                    }
+                console.log('✅ [Auth] Profile loaded successfully for:', userData.email);
+                const newUser = userData as User;
+                setUser(newUser);
+                userRef.current = newUser;
+                if (newUser.equipped_theme) {
+                    localStorage.setItem('levelone-theme', newUser.equipped_theme);
                 }
+                return newUser;
             } else {
                 console.warn('⚠️ [Auth] No profile data returned for:', userId);
+                return null;
             }
         } catch (err) {
             console.warn('⚠️ [Auth] Profile background sync failed:', err);
+            return null;
         }
     };
 
@@ -141,7 +141,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(true);
             await signIn(email, password);
             const { data: { user: authUser } } = await supabase.auth.getUser();
-            if (authUser) await fetchUserProfile(authUser.id);
+            if (authUser) {
+                return await fetchUserProfile(authUser.id);
+            }
+            return null;
         } catch (error) {
             setLoading(false);
             throw error;

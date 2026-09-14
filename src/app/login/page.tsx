@@ -39,19 +39,48 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            await signIn(email, password);
-            try {
-                if (document.documentElement.requestFullscreen) {
-                    await document.documentElement.requestFullscreen();
-                } else if ((document.documentElement as any).webkitRequestFullscreen) {
-                    await ((document.documentElement as any).webkitRequestFullscreen)();
+            const loggedInUser = await signIn(email.trim(), password);
+
+            if (typeof window !== 'undefined' && window.innerWidth > 768) {
+                try {
+                    if (document.documentElement.requestFullscreen) {
+                        await document.documentElement.requestFullscreen();
+                    } else if ((document.documentElement as any).webkitRequestFullscreen) {
+                        await ((document.documentElement as any).webkitRequestFullscreen)();
+                    }
+                } catch (e) {
+                    console.warn('Fullscreen request failed:', e);
                 }
-            } catch (e) {
-                console.warn('Fullscreen request failed:', e);
+            }
+
+            // Direct instant redirect for both mobile and desktop
+            if (loggedInUser?.role === 'admin') {
+                window.location.href = '/admin';
+                return;
+            } else if (loggedInUser) {
+                window.location.href = '/student';
+                return;
             }
         } catch (err: any) {
             console.error('Login error:', err);
-            setError(err.message || 'Failed to authenticate');
+            const msg = err?.message || '';
+            if (msg.includes('Lock broken') || msg.includes('steal')) {
+                // If browser tab contention occurred, retry once seamlessly
+                try {
+                    const retryUser = await signIn(email.trim(), password);
+                    if (retryUser?.role === 'admin') {
+                        window.location.href = '/admin';
+                        return;
+                    } else if (retryUser) {
+                        window.location.href = '/student';
+                        return;
+                    }
+                } catch (retryErr: any) {
+                    setError('Session refreshed. Please tap Log In again.');
+                }
+            } else {
+                setError(msg || 'Failed to authenticate');
+            }
         } finally {
             setLoading(false);
         }

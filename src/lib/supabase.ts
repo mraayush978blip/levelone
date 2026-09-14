@@ -17,7 +17,11 @@ export const supabase = createClient(
             persistSession: true,
             autoRefreshToken: true,
             detectSessionInUrl: true,
-            flowType: 'pkce'
+            flowType: 'pkce',
+            lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
+                // Bypass buggy navigator.locks on mobile/multi-tab browsers
+                return await fn();
+            }
         },
         global: {
             headers: {
