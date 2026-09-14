@@ -79,6 +79,37 @@ async function getPhaseContext(): Promise<string> {
     }
 }
 
+export const maxDuration = 30;
+
+// Timeout wrapper to prevent 408 Request Timeout errors
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
+function generateFallbackResponse(userPrompt: string, phaseContext: string): string {
+    const q = userPrompt.toLowerCase();
+    if (q.includes('who') && (q.includes('made') || q.includes('built') || q.includes('founder') || q.includes('developer') || q.includes('aayush'))) {
+        return `### ⚡ Creator & Architect\n\nLevelOne was created, architected, and built by **Aayush Sharma** — Full-Stack Developer & Cyber Security engineer.\n\n- **Portfolio:** [itsaayushsharma.vercel.app](https://itsaayushsharma.vercel.app/)\n- **LinkedIn:** [Aayush Sharma](https://www.linkedin.com/in/aayush-sharma-2013d)\n- **Notable Projects:** Acropolis Attendance Management System, JARVIS AI assistant, LevelOne Platform.\n\nFeel free to connect with Aayush on LinkedIn! 🚀`;
+    }
+    if (q.includes('intern') || q.includes('job') || q.includes('placement')) {
+        return `### 🎯 LevelOne Internship Program\n\n- **Top 3 Performers:** The top 3 ranked developers on the cohort final benchmark compete for **Guaranteed Internships**!\n- **Selection Criteria:** Milestone completion speed, project code quality, and peer competition points.\n- **Keep Pushing:** Stay active, submit each phase on time, and climb the leaderboard! 💻🔥`;
+    }
+    if (q.includes('refund') || q.includes('fee') || q.includes('money') || q.includes('price')) {
+        return `### 💰 Reward & Refund Policy\n\n- **Top 10 Performers:** The top 10 students on the final cohort leaderboard get an **80% course fee refund** as a performance reward!\n- **Our Philosophy:** We reward disciplined coders who complete their milestones without quitting.`;
+    }
+    if (q.includes('phase') || q.includes('syllabus') || q.includes('milestone')) {
+        return `### 🗺️ Cohort Phases & Roadmap\n\nLevelOne structures open-source learning into strict sequential milestones:\n\n${phaseContext}\n\n> 💡 **Tip:** Submit each phase within your 20-day pacing window to keep your access active!`;
+    }
+    if (q.includes('content') || q.includes('video') || q.includes('source') || q.includes('material')) {
+        return `### 📚 Curated Learning Philosophy\n\nWe transparently clarify that learning resources are curated from the world's highest-quality open tech materials.\n\n**The True Value:** We eliminate tutorial hell by structuring these into an intense 20-day milestone pacing, competitive leaderboards, and real internships for top performers!`;
+    }
+    return `### ⚡ LevelOne AI Assistant\n\nI am currently operating in low-latency standby mode. Here is what you need to know:\n\n- **Phases & Roadmap:** Complete your active phase assignments on time (20 days per phase).\n- **Leaderboard:** Earn points through timely phase submissions.\n- **Top 3 Perks:** Guaranteed internships for top 3 rankers!\n- **80% Refund:** Top 10 rankers receive an 80% fee refund.\n- **Need Mentor Help?** Post your queries directly in our community channel or reach out to \`aayush@levelonedev.tech\`.`;
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
@@ -91,32 +122,30 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // Enhanced logging for debugging
-        console.log('[AI API Route] Received request with', messages.length, 'messages');
-
+        const latestUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
+        const phaseContext = await getPhaseContext();
         const apiKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
 
         if (!apiKey) {
-            console.error('[AI API Route] ❌ CRITICAL: GROQ_API_KEY is not defined in environment variables.');
+            console.warn('[AI API Route] GROQ_API_KEY not configured, serving knowledge fallback response.');
             return NextResponse.json({
-                success: false,
-                error: "API_KEY_MISSING: Please configure the GROQ_API_KEY in your deployment settings."
-            }, { status: 500 });
+                success: true,
+                text: generateFallbackResponse(latestUserMsg, phaseContext)
+            });
         }
 
         console.log('[AI API Route] ✓ API Key found, initializing Groq client...');
 
+        // Prioritize fast, reliable models
         const models = [
             "llama-3.3-70b-versatile",
             "llama-3.1-8b-instant",
-            "gemma2-9b-it",
-            "mixtral-8x7b-32768"
+            "gemma2-9b-it"
         ];
 
         const groq = new Groq({ apiKey });
         let lastError: any = null;
 
-        const phaseContext = await getPhaseContext();
         const teamContext = `Levelone is built and maintained by Aayush Sharma and Aditya Sahu.
 1. **Aayush Sharma** — Lead Developer & Architect (Core systems, AI, backend, frontend)
    - Portfolio: https://itsaayushsharma.vercel.app/
@@ -127,11 +156,12 @@ export async function POST(request: NextRequest) {
         for (const model of models) {
             try {
                 console.log(`[AI API Route] Attempting with model: ${model}...`);
-                const completion = await groq.chat.completions.create({
-                    messages: [
-                        {
-                            role: "system",
-                            content: `You are 'Levelone AI', a futuristic coding and learning assistant for the 'Levelone' platform. Your tone should be strategic, slightly cyberpunk/hacker-like, but helpful and encouraging. Use technical metaphors.
+                const completion = await withTimeout(
+                    groq.chat.completions.create({
+                        messages: [
+                            {
+                                role: "system",
+                                content: `You are 'Levelone AI', a futuristic coding and learning assistant for the 'Levelone' platform. Your tone should be strategic, slightly cyberpunk/hacker-like, but helpful and encouraging. Use technical metaphors.
 
 === RESPONSE FORMAT RULES ===
 - ALWAYS use rich markdown formatting in your responses
@@ -188,14 +218,16 @@ When asked about the team, share all members based on the platform version. When
 ${phaseContext}
 
 When a student asks about a specific phase, its video content, or assignment — use the phase data above to give accurate, specific answers. Reference the YouTube video URL when relevant so students can find the right content. If a phase is paused or inactive, let the student know.`
-                        },
-                        ...messages.map((msg: { role: string, content: string }) => ({
-                            role: msg.role === 'user' ? 'user' as const : 'assistant' as const,
-                            content: msg.content
-                        }))
-                    ],
-                    model: model,
-                });
+                            },
+                            ...messages.map((msg: { role: string, content: string }) => ({
+                                role: msg.role === 'user' ? 'user' as const : 'assistant' as const,
+                                content: msg.content
+                            }))
+                        ],
+                        model: model,
+                    }),
+                    6000 // 6 second timeout per model
+                );
 
                 console.log(`[AI API Route] ✓ Response received successfully from ${model}`);
                 return NextResponse.json({
@@ -203,41 +235,24 @@ When a student asks about a specific phase, its video content, or assignment —
                     text: completion.choices[0]?.message?.content || ""
                 });
             } catch (error: any) {
-                console.warn(`[AI API Route] ⚠ Model ${model} failed:`, error?.message || 'Unknown error');
+                console.warn(`[AI API Route] ⚠ Model ${model} failed or timed out:`, error?.message || 'Unknown error');
                 lastError = error;
-                // Continue to next model
+                // Try next fast model
             }
         }
 
-        // If we get here, all models failed
-        console.error('[AI API Route] ❌ All models failed. Last error:', {
-            message: lastError?.message,
-            status: lastError?.status,
-            code: lastError?.code,
-            type: lastError?.constructor?.name
-        });
-
-        // Enhanced error message with diagnostic info
-        let errorMessage = lastError?.message || "AI_CORE_REACH_FAILURE";
-
-        if (lastError?.status === 429 || lastError?.message?.includes('429')) {
-            errorMessage = "Rate limit exceeded. Please wait a moment before trying again.";
-        } else if (lastError?.status === 401 || lastError?.message?.includes('unauthorized')) {
-            errorMessage = "Invalid API key. Please check your GROQ_API_KEY configuration.";
-        } else if (lastError?.message?.includes('fetch')) {
-            errorMessage = "Network error: Unable to reach Groq API. Please check your internet connection.";
-        }
-
+        // If models failed, return graceful knowledge fallback instead of throwing 500
+        console.warn('[AI API Route] All models exhausted or timed out. Serving fallback response. Last error:', lastError?.message);
         return NextResponse.json({
-            success: false,
-            error: errorMessage
-        }, { status: 500 });
+            success: true,
+            text: generateFallbackResponse(latestUserMsg, phaseContext)
+        });
 
     } catch (error: any) {
         console.error('[AI API Route] ❌ Unexpected error:', error);
         return NextResponse.json({
-            success: false,
-            error: error.message || 'Internal server error'
-        }, { status: 500 });
+            success: true,
+            text: "### ⚡ System Notice\n\nI am currently reconnecting to the neural network. Please ask your question again in a few seconds or reach out to our mentors on Discord/Telegram!"
+        });
     }
 }

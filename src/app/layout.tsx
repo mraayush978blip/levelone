@@ -205,12 +205,12 @@ export default function RootLayout({
                 <div className="relative flex flex-col items-center animate-fade-in-up">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-600/30 blur-[60px] rounded-full animate-pulse" />
 
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/icon-ninja-round.png"
-                    alt="Levelone Ninja"
-                    className="w-32 h-32 relative z-10 rounded-full shadow-[0_0_40px_rgba(59,130,246,0.3)] animate-float"
-                  />
+                  {/* Glowing LevelOne Emblem */}
+                  <div className="w-28 h-28 relative z-10 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 p-[2px] shadow-[0_0_50px_rgba(59,130,246,0.4)] animate-float">
+                    <div className="w-full h-full bg-[#0b0d14] rounded-[22px] flex items-center justify-center">
+                      <span className="text-4xl font-black text-blue-500 font-mono tracking-tighter">&gt;_</span>
+                    </div>
+                  </div>
 
                   <h1 className="mt-8 text-3xl font-black tracking-[-0.05em] text-white relative z-10">
                     LEVELONE
